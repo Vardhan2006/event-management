@@ -47,6 +47,9 @@ function Navbar() {
         <nav className="navbar-links">
           {NAV_LINKS.map((link) => {
             if (link.requiresAuth && !user) return null;
+
+            // 🔥 ROLE CHECK
+            if (link.role && link.role !== user?.role) return null;
             return (
               <NavLink
                 key={link.to}

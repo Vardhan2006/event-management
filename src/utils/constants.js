@@ -12,9 +12,13 @@ export const THEME = {
 
 export const NAV_LINKS = [
   { label: "Home", to: "/" },
-  { label: "Events", to: "/events" },
-  { label: "Create Event", to: "/create-event", requiresAuth: true },
-  { label: "Dashboard", to: "/dashboard", requiresAuth: true },
+  { label: "Venues", to: "/venues" },
+
+  // 👤 User only
+  { label: "My Bookings", to: "/my-bookings", requiresAuth: true, role: "user" },
+
+  // 👑 Owner only
+  { label: "Owner Dashboard", to: "/owner-dashboard", requiresAuth: true, role: "owner" }
 ];
 
 export const EVENT_CATEGORIES = [

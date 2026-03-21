@@ -4,19 +4,22 @@ import { useAuth } from "../context/AuthContext";
 
 function Login() {
   const navigate = useNavigate();
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
 
   const [credentials, setCredentials] = useState({
     email: "",
     password: "",
+    role: "user",
   });
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/dashboard");
+      navigate(
+        user?.role === "owner" ? "/owner-dashboard" : "/my-bookings"
+      );
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, user?.role]);
 
   const handleChange = (e) => {
     setCredentials((prev) => ({
@@ -34,9 +37,11 @@ function Login() {
     login({
       email: credentials.email,
       name,
+      id: credentials.email,
+      role: credentials.role,
     });
 
-    navigate("/dashboard");
+    navigate(credentials.role === "owner" ? "/owner-dashboard" : "/my-bookings");
   };
 
   return (
@@ -78,6 +83,22 @@ function Login() {
               onChange={handleChange}
               required
             />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label" htmlFor="role">
+              Role
+            </label>
+            <select
+              id="role"
+              name="role"
+              className="form-select"
+              value={credentials.role}
+              onChange={handleChange}
+            >
+              <option value="user">User</option>
+              <option value="owner">Venue owner</option>
+            </select>
           </div>
 
           <button

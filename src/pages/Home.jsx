@@ -1,9 +1,28 @@
 import { Link } from "react-router-dom";
-import EventCard from "../components/events/EventCard";
-import { MOCK_EVENTS } from "../utils/constants";
+import { useEffect, useState } from "react";
+import Loader from "../components/common/Loader";
+import VenueCard from "../components/venues/VenueCard";
+import venueService from "../services/venueService";
 
 function Home() {
-  const featured = MOCK_EVENTS.slice(0, 3);
+  const [featured, setFeatured] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        setLoading(true);
+        const data = await venueService.getVenues();
+        setFeatured(Array.isArray(data) ? data.slice(0, 3) : []);
+      } catch {
+        setFeatured([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    load();
+  }, []);
 
   return (
     <div className="page">
@@ -24,11 +43,11 @@ function Home() {
           </p>
 
           <div className="hero-actions">
-            <Link to="/events" className="btn btn-primary">
-              Browse upcoming events
+            <Link to="/venues" className="btn btn-primary">
+              Browse venues
             </Link>
-            <Link to="/create-event" className="btn btn-secondary">
-              Create an event
+            <Link to="/owner-dashboard" className="btn btn-secondary">
+              List a venue
             </Link>
           </div>
 
@@ -78,20 +97,26 @@ function Home() {
       <section>
         <div className="page-header">
           <div>
-            <h2 className="page-title">Featured events</h2>
+            <h2 className="page-title">Featured venues</h2>
             <p className="page-subtitle">
-              Hand-picked experiences you can join this month.
+              Popular spaces available for booking.
             </p>
           </div>
-          <Link to="/events" className="btn btn-secondary">
-            View all events
+          <Link to="/venues" className="btn btn-secondary">
+            View all venues
           </Link>
         </div>
-        <div className="grid grid-3">
-          {featured.map((event) => (
-            <EventCard key={event.id} event={event} />
-          ))}
-        </div>
+        {loading && <Loader label="Loading featured venues..." />}
+        {!loading && (
+          <div className="grid grid-3">
+            {featured.map((venue) => (
+              <VenueCard
+                key={venue?._id || venue?.id}
+                venue={venue}
+              />
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );
