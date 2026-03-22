@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 
 function formatPrice(value) {
@@ -11,16 +12,28 @@ function formatPrice(value) {
 function VenueCard({ venue }) {
   const id = venue?._id || venue?.id;
 
+  useEffect(() => {
+    if (venue?.images?.length) {
+      // eslint-disable-next-line no-console
+      console.log("[VenueCard] venue:", venue?.name, "first image:", venue.images[0]);
+    }
+  }, [venue]);
+
   return (
     <article className="venue-card">
 
-      {/* ✅ IMAGE INSIDE COMPONENT */}
-      {venue?.images?.length > 0 && (
+      {/* First Cloudinary / stored URL */}
+      {venue?.images?.length > 0 && venue.images[0] ? (
         <img
           src={venue.images[0]}
-          alt={venue.name}
+          alt={venue?.name || "Venue"}
           className="venue-card-image"
+          loading="lazy"
         />
+      ) : (
+        <div className="venue-card-image venue-card-image-placeholder" aria-hidden>
+          No photo
+        </div>
       )}
 
       <div className="venue-card-top">

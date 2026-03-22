@@ -1,9 +1,11 @@
+const path = require("path");
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const connectDB = require("./config/db");
 
-dotenv.config();
+// Always load .env from the backend folder (works even if cwd is project root)
+dotenv.config({ path: path.join(__dirname, ".env") });
 
 const app = express();
 

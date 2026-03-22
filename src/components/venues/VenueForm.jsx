@@ -6,6 +6,8 @@ function toCommaList(values) {
   return String(values);
 }
 
+const MAX_IMAGES = 5;
+
 function VenueForm({ onSubmit, isSubmitting = false, initialValues }) {
   const preset = useMemo(
     () => ({
@@ -25,6 +27,8 @@ function VenueForm({ onSubmit, isSubmitting = false, initialValues }) {
     services: toCommaList(preset.services),
   }));
 
+  const [imageFiles, setImageFiles] = useState([]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -33,25 +37,45 @@ function VenueForm({ onSubmit, isSubmitting = false, initialValues }) {
     }));
   };
 
+  const handleFilesChange = (e) => {
+    const list = e.target.files ? Array.from(e.target.files) : [];
+    const next = list.slice(0, MAX_IMAGES);
+    setImageFiles(next);
+    // eslint-disable-next-line no-console
+    console.log("[VenueForm] selected files:", next.map((f) => `${f.name} (${f.size}b)`));
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.name || !formData.location || !formData.capacity) return;
 
-    const payload = {
-      name: formData.name.trim(),
-      location: formData.location.trim(),
-      capacity: Number(formData.capacity),
-      pricePerDay: Number(formData.pricePerDay || 0),
-      description: formData.description?.trim() || "",
-      services: formData.services
-        ? formData.services
-            .split(",")
-            .map((s) => s.trim())
-            .filter(Boolean)
-        : [],
-    };
+    const servicesArr = formData.services
+      ? formData.services
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [];
 
-    onSubmit(payload);
+    const fd = new FormData();
+    fd.append("name", formData.name.trim());
+    fd.append("location", formData.location.trim());
+    fd.append("capacity", String(Number(formData.capacity)));
+    fd.append("pricePerDay", String(Number(formData.pricePerDay || 0)));
+    fd.append("description", formData.description?.trim() || "");
+    fd.append("services", JSON.stringify(servicesArr));
+
+    imageFiles.forEach((file) => {
+      fd.append("images", file);
+    });
+
+    // eslint-disable-next-line no-console
+    console.log("[VenueForm] FormData built — field names:", [...new Set([...fd.keys()])]);
+    for (const [k, v] of fd.entries()) {
+      // eslint-disable-next-line no-console
+      console.log(`  ${k}:`, v instanceof File ? `File(${v.name})` : v);
+    }
+
+    onSubmit(fd);
   };
 
   return (
@@ -59,6 +83,26 @@ function VenueForm({ onSubmit, isSubmitting = false, initialValues }) {
       <div className="form-title">Create a venue</div>
       <div className="form-subtitle">
         Add your space so people can request bookings.
+      </div>
+
+      <div className="form-group">
+        <label className="form-label" htmlFor="venue-images">
+          Photos (up to {MAX_IMAGES})
+        </label>
+        <input
+          id="venue-images"
+          name="images"
+          type="file"
+          accept="image/jpeg,image/png,image/jpg,image/webp,image/gif"
+          multiple
+          className="form-input"
+          onChange={handleFilesChange}
+        />
+        {imageFiles.length > 0 && (
+          <p className="text-sm text-muted" style={{ marginTop: 8 }}>
+            {imageFiles.length} file(s) selected
+          </p>
+        )}
       </div>
 
       <div className="form-group">
@@ -163,4 +207,3 @@ function VenueForm({ onSubmit, isSubmitting = false, initialValues }) {
 }
 
 export default VenueForm;
-

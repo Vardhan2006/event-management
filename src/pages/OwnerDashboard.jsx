@@ -49,15 +49,25 @@ function OwnerDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleCreateVenue = async (payload) => {
+  const handleCreateVenue = async (formData) => {
     if (!ownerId) {
       setError("Owner identity is missing. Please sign in again.");
       return;
     }
+    if (!(formData instanceof FormData)) {
+      // eslint-disable-next-line no-console
+      console.error("[OwnerDashboard] Expected FormData from VenueForm");
+      setError("Invalid form data.");
+      return;
+    }
+    formData.append("ownerId", ownerId);
+
     setCreatingVenue(true);
     setError("");
     try {
-      await venueService.createVenue({ ...payload, ownerId });
+      const created = await venueService.createVenue(formData);
+      // eslint-disable-next-line no-console
+      console.log("[OwnerDashboard] venue created:", created);
       await refresh();
     } catch (err) {
       // eslint-disable-next-line no-console
