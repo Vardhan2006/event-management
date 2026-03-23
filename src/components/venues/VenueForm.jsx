@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 function toCommaList(values) {
   if (!values) return "";
@@ -8,26 +8,41 @@ function toCommaList(values) {
 
 const MAX_IMAGES = 5;
 
-function VenueForm({ onSubmit, isSubmitting = false, initialValues }) {
-  const preset = useMemo(
-    () => ({
-      name: "",
-      location: "",
-      capacity: "",
-      pricePerDay: "",
-      description: "",
-      services: "",
-      ...(initialValues || {}),
-    }),
-    [initialValues]
-  );
-
-  const [formData, setFormData] = useState(() => ({
-    ...preset,
-    services: toCommaList(preset.services),
-  }));
-
+function VenueForm({
+  onSubmit,
+  onCancel,
+  isSubmitting = false,
+  initialValues,
+  isEditMode = false,
+  syncKey = "new",
+}) {
+  const [formData, setFormData] = useState({
+    name: "",
+    location: "",
+    capacity: "",
+    pricePerDay: "",
+    description: "",
+    services: "",
+  });
   const [imageFiles, setImageFiles] = useState([]);
+  const initialValuesRef = useRef(initialValues);
+  initialValuesRef.current = initialValues;
+
+  useEffect(() => {
+    const iv = initialValuesRef.current || {};
+    setFormData({
+      name: iv.name != null ? String(iv.name) : "",
+      location: iv.location != null ? String(iv.location) : "",
+      capacity: iv.capacity != null ? String(iv.capacity) : "",
+      pricePerDay:
+        iv.pricePerDay != null && iv.pricePerDay !== ""
+          ? String(iv.pricePerDay)
+          : "",
+      description: iv.description != null ? String(iv.description) : "",
+      services: toCommaList(iv.services),
+    });
+    setImageFiles([]);
+  }, [syncKey]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -39,10 +54,7 @@ function VenueForm({ onSubmit, isSubmitting = false, initialValues }) {
 
   const handleFilesChange = (e) => {
     const list = e.target.files ? Array.from(e.target.files) : [];
-    const next = list.slice(0, MAX_IMAGES);
-    setImageFiles(next);
-    // eslint-disable-next-line no-console
-    console.log("[VenueForm] selected files:", next.map((f) => `${f.name} (${f.size}b)`));
+    setImageFiles(list.slice(0, MAX_IMAGES));
   };
 
   const handleSubmit = (e) => {
@@ -64,30 +76,56 @@ function VenueForm({ onSubmit, isSubmitting = false, initialValues }) {
     fd.append("description", formData.description?.trim() || "");
     fd.append("services", JSON.stringify(servicesArr));
 
+    if (isEditMode && Array.isArray(initialValues?.images)) {
+      fd.append("existingImages", JSON.stringify(initialValues.images));
+    }
+
     imageFiles.forEach((file) => {
       fd.append("images", file);
     });
 
-    // eslint-disable-next-line no-console
-    console.log("[VenueForm] FormData built — field names:", [...new Set([...fd.keys()])]);
-    for (const [k, v] of fd.entries()) {
-      // eslint-disable-next-line no-console
-      console.log(`  ${k}:`, v instanceof File ? `File(${v.name})` : v);
-    }
-
     onSubmit(fd);
   };
 
+  const title = isEditMode ? "Edit venue" : "Create a venue";
+  const subtitle = isEditMode
+    ? "Update your listing. New photos are added to your existing images."
+    : "Add your space so people can request bookings.";
+  const submitLabel = isEditMode ? "Update venue" : "Create venue";
+
   return (
     <form className="form card venue-form" onSubmit={handleSubmit}>
-      <div className="form-title">Create a venue</div>
-      <div className="form-subtitle">
-        Add your space so people can request bookings.
+      <div className="venue-form-header-row">
+        <div>
+          <div className="form-title">{title}</div>
+          <div className="form-subtitle">{subtitle}</div>
+        </div>
+        {onCancel && (
+          <button
+            type="button"
+            className="btn btn-ghost"
+            onClick={onCancel}
+            disabled={isSubmitting}
+          >
+            Close
+          </button>
+        )}
       </div>
+
+      {isEditMode && initialValues?.images?.length > 0 && (
+        <div className="form-group">
+          <span className="form-label">Current photos</span>
+          <div className="venue-form-existing-images">
+            {initialValues.images.slice(0, 5).map((url) => (
+              <img key={url} src={url} alt="" className="venue-form-thumb" />
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="form-group">
         <label className="form-label" htmlFor="venue-images">
-          Photos (up to {MAX_IMAGES})
+          {isEditMode ? "Add more photos (optional)" : `Photos (up to ${MAX_IMAGES})`}
         </label>
         <input
           id="venue-images"
@@ -100,7 +138,7 @@ function VenueForm({ onSubmit, isSubmitting = false, initialValues }) {
         />
         {imageFiles.length > 0 && (
           <p className="text-sm text-muted" style={{ marginTop: 8 }}>
-            {imageFiles.length} file(s) selected
+            {imageFiles.length} new file(s) selected
           </p>
         )}
       </div>
@@ -200,7 +238,7 @@ function VenueForm({ onSubmit, isSubmitting = false, initialValues }) {
         className="btn btn-primary btn-full"
         disabled={isSubmitting}
       >
-        {isSubmitting ? "Saving..." : "Create venue"}
+        {isSubmitting ? "Saving..." : submitLabel}
       </button>
     </form>
   );

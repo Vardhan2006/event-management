@@ -808,6 +808,63 @@ body {
   margin-top: 2px;
 }
 
+.venue-card-footer-owner {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.venue-card-owner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.owner-dashboard-section {
+  margin-bottom: 22px;
+}
+
+.owner-dashboard-alert {
+  margin-bottom: 16px;
+}
+
+.owner-dashboard-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.owner-dashboard-form-section {
+  margin-top: 8px;
+}
+
+.venue-form-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.venue-form-existing-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.venue-form-thumb {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+}
+
 /* Venue details page */
 .venue-details-layout {
   margin-top: 6px;

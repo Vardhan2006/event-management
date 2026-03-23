@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { Link } from "react-router-dom";
 
 function formatPrice(value) {
@@ -9,20 +8,11 @@ function formatPrice(value) {
   })}`;
 }
 
-function VenueCard({ venue }) {
+function VenueCard({ venue, ownerMode, onEdit, onDelete }) {
   const id = venue?._id || venue?.id;
-
-  useEffect(() => {
-    if (venue?.images?.length) {
-      // eslint-disable-next-line no-console
-      console.log("[VenueCard] venue:", venue?.name, "first image:", venue.images[0]);
-    }
-  }, [venue]);
 
   return (
     <article className="venue-card">
-
-      {/* First Cloudinary / stored URL */}
       {venue?.images?.length > 0 && venue.images[0] ? (
         <img
           src={venue.images[0]}
@@ -64,12 +54,31 @@ function VenueCard({ venue }) {
         </div>
       )}
 
-      <div className="venue-card-footer">
+      <div className={`venue-card-footer ${ownerMode ? "venue-card-footer-owner" : ""}`}>
         <Link to={`/venues/${id}`} className="btn btn-secondary">
           View details
         </Link>
+        {ownerMode && onEdit && onDelete && (
+          <div className="venue-card-owner-actions">
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => onEdit(venue)}
+              aria-label="Edit venue"
+            >
+              Edit
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => onDelete(venue)}
+              aria-label="Delete venue"
+            >
+              Delete
+            </button>
+          </div>
+        )}
       </div>
-
     </article>
   );
 }

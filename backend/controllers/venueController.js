@@ -116,3 +116,80 @@ exports.getVenueById = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+exports.updateVenue = async (req, res) => {
+  try {
+    const venue = await Venue.findById(req.params.id);
+    if (!venue) {
+      return res.status(404).json({ message: "Venue not found" });
+    }
+
+    const {
+      name,
+      location,
+      capacity,
+      pricePerDay,
+      description,
+      services: servicesRaw,
+      ownerId,
+      existingImages: existingImagesRaw
+    } = req.body;
+
+    if (ownerId == null || String(venue.ownerId) !== String(ownerId)) {
+      return res.status(403).json({ message: "Not authorized to update this venue" });
+    }
+
+    let existingUrls = [];
+    if (existingImagesRaw != null && existingImagesRaw !== "") {
+      try {
+        const parsed = JSON.parse(existingImagesRaw);
+        if (Array.isArray(parsed)) existingUrls = parsed.filter(Boolean);
+      } catch {
+        existingUrls = Array.isArray(venue.images) ? [...venue.images] : [];
+      }
+    } else {
+      existingUrls = Array.isArray(venue.images) ? [...venue.images] : [];
+    }
+
+    const newUrls = getImageUrlsFromFiles(req.files);
+    const mergedImages = newUrls.length > 0 ? [...existingUrls, ...newUrls] : existingUrls;
+
+    const cap = capacity != null ? Number(capacity) : venue.capacity;
+    const price = pricePerDay != null ? Number(pricePerDay) : venue.pricePerDay;
+    if (Number.isNaN(cap) || Number.isNaN(price)) {
+      return res.status(400).json({ message: "capacity and pricePerDay must be numbers" });
+    }
+
+    venue.name = name != null ? String(name).trim() : venue.name;
+    venue.location = location != null ? String(location).trim() : venue.location;
+    venue.capacity = cap;
+    venue.pricePerDay = price;
+    venue.description = description != null ? String(description).trim() : venue.description;
+    venue.services = servicesRaw != null ? parseServices(servicesRaw) : venue.services;
+    venue.images = mergedImages;
+
+    const updated = await venue.save();
+    res.json(updated);
+  } catch (error) {
+    console.error("[updateVenue] error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.deleteVenue = async (req, res) => {
+  try {
+    const { ownerId } = req.query;
+    const venue = await Venue.findById(req.params.id);
+    if (!venue) {
+      return res.status(404).json({ message: "Venue not found" });
+    }
+    if (ownerId == null || String(venue.ownerId) !== String(ownerId)) {
+      return res.status(403).json({ message: "Not authorized to delete this venue" });
+    }
+    await Venue.findByIdAndDelete(req.params.id);
+    res.json({ message: "Venue deleted", id: req.params.id });
+  } catch (error) {
+    console.error("[deleteVenue] error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};

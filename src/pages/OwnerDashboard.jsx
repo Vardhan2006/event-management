@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Loader from "../components/common/Loader";
 import BookingCard from "../components/bookings/BookingCard";
 import VenueCard from "../components/venues/VenueCard";
@@ -19,11 +19,22 @@ function OwnerDashboard() {
   const [error, setError] = useState("");
 
   const [venues, setVenues] = useState([]);
-  const [bookingRequests, setBookingRequests] = useState([]);
+  const [bookings, setBookings] = useState([]);
 
-  const [creatingVenue, setCreatingVenue] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [selectedVenue, setSelectedVenue] = useState(null);
+  const [formSession, setFormSession] = useState(0);
 
-  const refresh = async () => {
+  const [savingVenue, setSavingVenue] = useState(false);
+
+  const fetchData = useCallback(async () => {
+    if (!ownerId) {
+      setVenues([]);
+      setBookings([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError("");
     try {
@@ -34,68 +45,115 @@ function OwnerDashboard() {
       setVenues(filtered);
 
       const ownerBookings = await eventService.getOwnerBookings(ownerId);
-      setBookingRequests(Array.isArray(ownerBookings) ? ownerBookings : []);
+      setBookings(Array.isArray(ownerBookings) ? ownerBookings : []);
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.error(err);
       setError("We couldn’t load your dashboard data.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [ownerId]);
 
   useEffect(() => {
-    refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    fetchData();
+  }, [fetchData]);
 
-  const handleCreateVenue = async (formData) => {
+  const closeForm = () => {
+    setShowForm(false);
+    setEditMode(false);
+    setSelectedVenue(null);
+  };
+
+  const openCreateForm = () => {
+    setSelectedVenue(null);
+    setEditMode(false);
+    setFormSession((n) => n + 1);
+    setShowForm(true);
+  };
+
+  const openEditForm = (venue) => {
+    setSelectedVenue(venue);
+    setEditMode(true);
+    setFormSession((n) => n + 1);
+    setShowForm(true);
+  };
+
+  const handleVenueSubmit = async (formData) => {
     if (!ownerId) {
       setError("Owner identity is missing. Please sign in again.");
       return;
     }
     if (!(formData instanceof FormData)) {
-      // eslint-disable-next-line no-console
-      console.error("[OwnerDashboard] Expected FormData from VenueForm");
       setError("Invalid form data.");
       return;
     }
     formData.append("ownerId", ownerId);
 
-    setCreatingVenue(true);
+    setSavingVenue(true);
     setError("");
     try {
-      const created = await venueService.createVenue(formData);
-      // eslint-disable-next-line no-console
-      console.log("[OwnerDashboard] venue created:", created);
-      await refresh();
+      if (editMode && selectedVenue) {
+        const id = selectedVenue._id || selectedVenue.id;
+        await venueService.updateVenue(id, formData);
+      } else {
+        await venueService.createVenue(formData);
+      }
+      closeForm();
+      await fetchData();
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.error(err);
-      setError("We couldn’t create your venue. Please try again.");
+      setError(
+        editMode
+          ? "We couldn’t update this venue. Please try again."
+          : "We couldn’t create this venue. Please try again."
+      );
     } finally {
-      setCreatingVenue(false);
+      setSavingVenue(false);
+    }
+  };
+
+  const handleDeleteVenue = async (venue) => {
+    const name = venue?.name || "this venue";
+    if (!window.confirm(`Delete "${name}"? This cannot be undone.`)) {
+      return;
+    }
+    const id = venue?._id || venue?.id;
+    if (!id || !ownerId) return;
+
+    setError("");
+    try {
+      await venueService.deleteVenue(id, ownerId);
+      setVenues((prev) =>
+        prev.filter((v) => String(v._id || v.id) !== String(id))
+      );
+      if (selectedVenue && String(selectedVenue._id || selectedVenue.id) === String(id)) {
+        closeForm();
+      }
+    } catch (err) {
+      console.error(err);
+      setError("We couldn’t delete this venue. Please try again.");
     }
   };
 
   const handleReviewBooking = async (bookingId, status) => {
     try {
       await eventService.reviewBooking(bookingId, { status, ownerId });
-      await refresh();
+      await fetchData();
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.error(err);
       setError("We couldn’t update this booking request. Please try again.");
     }
   };
 
+  const formSyncKey = `${formSession}-${editMode}-${selectedVenue?._id || selectedVenue?.id || "new"}`;
+
   return (
-    <div className="page">
+    <div className="page owner-dashboard">
       <div className="page-header">
         <div>
           <h1 className="page-title">Owner dashboard</h1>
           <p className="page-subtitle">
-            Manage your venues and approve booking requests.
+            Review booking requests, manage venues, and add new listings.
           </p>
         </div>
       </div>
@@ -103,76 +161,92 @@ function OwnerDashboard() {
       {loading && <Loader label="Loading owner dashboard..." />}
 
       {!loading && error && (
-        <div className="card" style={{ marginBottom: 16 }}>
+        <div className="card owner-dashboard-alert">
           <div className="card-title">Something went wrong</div>
           <div className="card-subtitle">{error}</div>
         </div>
       )}
 
       {!loading && (
-        <div className="grid grid-2">
-          <section className="card">
-            <div className="card-header">
-              <h2 className="card-title">Your venues</h2>
-              <p className="card-subtitle">
-                Create new venues and view what you’ve listed.
-              </p>
-            </div>
-
-            <VenueForm
-              onSubmit={handleCreateVenue}
-              isSubmitting={creatingVenue}
-            />
-
-            <div style={{ height: 18 }} />
-
-            {venues.length === 0 ? (
-              <p className="text-muted text-sm">
-                No venues yet. Create your first venue above.
-              </p>
-            ) : (
-              <div className="grid venues-grid">
-                {venues.map((venue) => (
-                  <VenueCard
-                    key={venue?._id || venue?.id}
-                    venue={venue}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
-
-          <section className="card">
+        <>
+          <section className="card owner-dashboard-section">
             <div className="card-header">
               <h2 className="card-title">Booking requests</h2>
               <p className="card-subtitle">
-                Review requests and approve or reject.
+                Approve or reject venue booking requests.
               </p>
             </div>
-
-            {bookingRequests.length === 0 ? (
-              <p className="text-muted text-sm">
-                No booking requests at the moment.
-              </p>
+            {bookings.length === 0 ? (
+              <p className="text-muted text-sm">No booking requests at the moment.</p>
             ) : (
               <div className="booking-list">
-                {bookingRequests.map((booking) => (
+                {bookings.map((booking) => (
                   <BookingCard
                     key={booking?._id || booking?.id}
                     booking={booking}
                     isOwnerView
-                    onApprove={(id) => handleReviewBooking(id, "approved")}
-                    onReject={(id) => handleReviewBooking(id, "rejected")}
+                    onApprove={(bid) => handleReviewBooking(bid, "approved")}
+                    onReject={(bid) => handleReviewBooking(bid, "rejected")}
                   />
                 ))}
               </div>
             )}
           </section>
-        </div>
+
+          <section className="card owner-dashboard-section">
+            <div className="card-header owner-dashboard-section-header">
+              <div>
+                <h2 className="card-title">My venues</h2>
+                <p className="card-subtitle">
+                  Venues you have listed. Edit, delete, or view public details.
+                </p>
+              </div>
+              {!showForm && (
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={openCreateForm}
+                >
+                  + Add new venue
+                </button>
+              )}
+            </div>
+
+            {venues.length === 0 ? (
+              <p className="text-muted text-sm">
+                No venues yet. Use &quot;+ Add new venue&quot; to create one.
+              </p>
+            ) : (
+              <div className="grid venues-grid grid-3">
+                {venues.map((venue) => (
+                  <VenueCard
+                    key={venue?._id || venue?.id}
+                    venue={venue}
+                    ownerMode
+                    onEdit={openEditForm}
+                    onDelete={handleDeleteVenue}
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+
+          {showForm && (
+            <section className="owner-dashboard-form-section">
+              <VenueForm
+                syncKey={formSyncKey}
+                isEditMode={editMode}
+                initialValues={editMode && selectedVenue ? selectedVenue : {}}
+                onSubmit={handleVenueSubmit}
+                onCancel={closeForm}
+                isSubmitting={savingVenue}
+              />
+            </section>
+          )}
+        </>
       )}
     </div>
   );
 }
 
 export default OwnerDashboard;
-

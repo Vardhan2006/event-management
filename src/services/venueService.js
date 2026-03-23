@@ -49,10 +49,27 @@ export async function createVenue(formData) {
   return response.data;
 }
 
+export async function updateVenue(id, formData) {
+  const response = await API.patch(`/venues/${id}`, formData, {
+    maxContentLength: Infinity,
+    maxBodyLength: Infinity,
+  });
+  return response.data;
+}
+
+export async function deleteVenue(id, ownerId) {
+  const response = await API.delete(`/venues/${id}`, {
+    params: { ownerId },
+  });
+  return response.data;
+}
+
 const venueService = {
   getVenues,
   getVenueById,
   createVenue,
+  updateVenue,
+  deleteVenue,
 };
 
 export default venueService;

@@ -5,7 +5,9 @@ const router = express.Router();
 const {
   createVenue,
   getVenues,
-  getVenueById
+  getVenueById,
+  updateVenue,
+  deleteVenue
 } = require("../controllers/venueController");
 
 // ✅ Import upload middleware
@@ -14,10 +16,11 @@ const upload = require("../middleware/upload");
 // 🔥 POST with image upload
 router.post("/", upload.array("images", 5), createVenue);
 
-// GET all venues
 router.get("/", getVenues);
 
-// GET single venue
+router.patch("/:id", upload.array("images", 5), updateVenue);
+router.delete("/:id", deleteVenue);
+
 router.get("/:id", getVenueById);
 
 module.exports = router;
