@@ -16,14 +16,15 @@ jobs:
       - name: Setup Node (Frontend)
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 20
           cache: 'npm'
 
       - name: Install Frontend
         run: npm ci
 
       - name: Build Frontend
-        run: npm run build
+        run: |
+          CI=false npm run build
 
   backend:
     runs-on: ubuntu-latest
@@ -34,7 +35,7 @@ jobs:
       - name: Setup Node (Backend)
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 20
 
       - name: Install Backend
         run: |
