@@ -5,6 +5,7 @@ import VenueCard from "../components/venues/VenueCard";
 import venueService from "../services/venueService";
 
 function Home() {
+  console.log("REAL CHANGE");
   const [featured, setFeatured] = useState([]);
   const [loading, setLoading] = useState(true);
 
