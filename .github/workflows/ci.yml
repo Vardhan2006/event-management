@@ -1,26 +1,48 @@
-name: CI Pipeline
+name: Full Stack CI
 
 on:
   push:
-    branches: [dev]
+    branches: [event-ui]
   pull_request:
-    branches: [main]
+    branches: [event-ui]
 
 jobs:
-  build:
+  frontend:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: Setup Node.js
+      - name: Setup Node (Frontend)
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: Install Frontend
+        run: npm ci
+
+      - name: Build Frontend
+        run: npm run build
+
+  backend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node (Backend)
         uses: actions/setup-node@v3
         with:
           node-version: 18
 
-      - name: Install Dependencies
-        run: npm install
+      - name: Install Backend
+        run: |
+          cd backend
+          npm ci
 
-      - name: Build Application
-        run: npm run build
+      - name: Check Backend Starts
+        run: |
+          cd backend
+          node server.js &
+          sleep 5

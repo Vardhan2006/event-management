@@ -53,18 +53,23 @@ function MyBookings() {
       )}
 
       {!loading && !error && bookings.length === 0 && (
-        <div className="card">
-          <div className="card-title">No bookings yet</div>
-          <div className="card-subtitle">
+        <div className="empty-state">
+          <div className="empty-state-icon">📅</div>
+          <h3 className="empty-state-title">No bookings yet</h3>
+          <p className="empty-state-subtitle">
             Visit a venue and request a booking to get started.
-          </div>
+          </p>
         </div>
       )}
 
       {!loading && !error && bookings.length > 0 && (
         <div className="booking-list">
           {bookings.map((booking) => (
-            <BookingCard key={booking?._id || booking?.id} booking={booking} />
+            <BookingCard 
+              key={booking?._id || booking?.id} 
+              booking={booking} 
+              showVenueDetails={true}
+            />
           ))}
         </div>
       )}

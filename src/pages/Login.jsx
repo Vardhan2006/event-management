@@ -45,70 +45,83 @@ function Login() {
   };
 
   return (
-    <div className="page">
-      <div className="auth-wrapper">
-        <form className="form card" onSubmit={handleSubmit}>
-          <div className="form-title">Login</div>
-          <div className="form-subtitle">
-            Sign in to manage your events and registrations.
+    <div className="login-page">
+      <div className="login-container">
+        <div className="login-card">
+          <div className="login-header">
+            <h1 className="login-title">Welcome Back</h1>
+            <p className="login-subtitle">
+              Login to continue booking your perfect venue
+            </p>
           </div>
 
-          <div className="form-group">
-            <label className="form-label" htmlFor="email">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              name="email"
-              className="form-input"
-              placeholder="you@example.com"
-              value={credentials.email}
-              onChange={handleChange}
-              required
-            />
-          </div>
+          <form className="login-form" onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label className="form-label" htmlFor="email">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                name="email"
+                className="form-input"
+                placeholder="you@example.com"
+                value={credentials.email}
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-          <div className="form-group">
-            <label className="form-label" htmlFor="password">
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              name="password"
-              className="form-input"
-              placeholder="••••••••"
-              value={credentials.password}
-              onChange={handleChange}
-              required
-            />
-          </div>
+            <div className="form-group">
+              <label className="form-label" htmlFor="password">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                name="password"
+                className="form-input"
+                placeholder="••••••••"
+                value={credentials.password}
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-          <div className="form-group">
-            <label className="form-label" htmlFor="role">
-              Role
-            </label>
-            <select
-              id="role"
-              name="role"
-              className="form-select"
-              value={credentials.role}
-              onChange={handleChange}
+            <div className="form-group">
+              <label className="form-label" htmlFor="role">
+                Role
+              </label>
+              <select
+                id="role"
+                name="role"
+                className="form-select"
+                value={credentials.role}
+                onChange={handleChange}
+              >
+                <option value="user">User</option>
+                <option value="owner">Venue owner</option>
+              </select>
+            </div>
+
+            <button
+              type="submit"
+              className="btn btn-primary btn-full login-btn"
+              disabled={submitting}
             >
-              <option value="user">User</option>
-              <option value="owner">Venue owner</option>
-            </select>
-          </div>
+              {submitting ? "Signing in..." : "Login"}
+            </button>
+          </form>
 
-          <button
-            type="submit"
-            className="btn btn-primary btn-full"
-            disabled={submitting}
-          >
-            {submitting ? "Signing in..." : "Login"}
-          </button>
-        </form>
+          <div className="login-footer">
+            <p className="login-signup-text">
+              Don't have an account?{" "}
+              <a href="#!" className="signup-link">
+                Sign up
+              </a>
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

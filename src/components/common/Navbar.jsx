@@ -86,7 +86,7 @@ function Navbar() {
           ) : (
             <button
               type="button"
-              className="btn btn-ghost"
+              className="btn btn-primary"
               onClick={() => {
                 setMenuOpen(false);
                 navigate("/login");

@@ -26,43 +26,45 @@ function VenueCard({ venue, ownerMode, onEdit, onDelete }) {
         </div>
       )}
 
-      <div className="venue-card-top">
-        <h3 className="venue-card-title">{venue?.name}</h3>
-        {venue?.pricePerDay !== undefined && venue?.pricePerDay !== null && (
-          <span className="venue-card-price">
-            {formatPrice(venue.pricePerDay)}
-          </span>
-        )}
-      </div>
-
-      <div className="venue-card-meta">
-        <span>{venue?.location}</span>
-        {venue?.capacity !== undefined && venue?.capacity !== null && (
-          <span>
-            · Up to {Number(venue.capacity).toLocaleString()} guests
-          </span>
-        )}
-      </div>
-
-      {venue?.services?.length > 0 && (
-        <div className="venue-card-services">
-          {venue.services.slice(0, 3).map((s) => (
-            <span key={s} className="pill">
-              {s}
+      <div className="venue-card-content">
+        <div className="venue-card-top">
+          <h3 className="venue-card-title">{venue?.name}</h3>
+          {venue?.pricePerDay !== undefined && venue?.pricePerDay !== null && (
+            <span className="venue-card-price">
+              {formatPrice(venue.pricePerDay)}
             </span>
-          ))}
+          )}
         </div>
-      )}
+
+        <div className="venue-card-meta">
+          <span>{venue?.location}</span>
+          {venue?.capacity !== undefined && venue?.capacity !== null && (
+            <span>
+              · Up to {Number(venue.capacity).toLocaleString()} guests
+            </span>
+          )}
+        </div>
+
+        {venue?.services?.length > 0 && (
+          <div className="venue-card-services">
+            {venue.services.slice(0, 3).map((s) => (
+              <span key={s} className="pill">
+                {s}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
 
       <div className={`venue-card-footer ${ownerMode ? "venue-card-footer-owner" : ""}`}>
-        <Link to={`/venues/${id}`} className="btn btn-secondary">
-          View details
-        </Link>
-        {ownerMode && onEdit && onDelete && (
+        {ownerMode && onEdit && onDelete ? (
           <div className="venue-card-owner-actions">
+            <Link to={`/venues/${id}`} className="btn btn-secondary btn-compact">
+              View
+            </Link>
             <button
               type="button"
-              className="btn btn-secondary"
+              className="btn btn-secondary btn-compact"
               onClick={() => onEdit(venue)}
               aria-label="Edit venue"
             >
@@ -70,13 +72,17 @@ function VenueCard({ venue, ownerMode, onEdit, onDelete }) {
             </button>
             <button
               type="button"
-              className="btn btn-secondary"
+              className="btn btn-secondary btn-compact"
               onClick={() => onDelete(venue)}
               aria-label="Delete venue"
             >
               Delete
             </button>
           </div>
+        ) : (
+          <Link to={`/venues/${id}`} className="venue-card-link btn btn-secondary">
+            View details
+          </Link>
         )}
       </div>
     </article>
