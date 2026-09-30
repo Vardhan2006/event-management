@@ -94,12 +94,46 @@ exports.getOwnerBookings = asyncHandler(async (req, res) => {
     filter.status = req.validated.query.status;
   }
 
+  if (req.validated?.query?.venueId) {
+    filter.venueId = req.validated.query.venueId;
+  }
+
   const bookings = await Booking.find(filter)
     .populate("venueId", "name location")
     .populate("userId", "name email")
     .sort({ createdAt: -1 });
 
   res.json(bookings);
+});
+
+exports.getBookingById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new ApiError(400, "INVALID_ID", "Invalid booking ID format");
+  }
+
+  const booking = await Booking.findById(id)
+    .populate("venueId", "name location")
+    .populate("userId", "name email");
+
+  if (!booking) {
+    throw new ApiError(404, "NOT_FOUND", "Booking not found");
+  }
+
+  const callerId = String(req.user._id || req.user.id);
+  const bookerId = String(booking.userId._id || booking.userId);
+  const ownerId = String(booking.ownerId);
+
+  if (callerId !== bookerId && callerId !== ownerId) {
+    throw new ApiError(
+      403,
+      "FORBIDDEN",
+      "You do not have permission to view this booking"
+    );
+  }
+
+  res.json(booking);
 });
 
 exports.reviewBookingStatus = asyncHandler(async (req, res) => {

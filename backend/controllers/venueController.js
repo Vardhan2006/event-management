@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const Venue = require("../models/Venue");
 const ApiError = require("../utils/ApiError");
 const asyncHandler = require("../utils/asyncHandler");
+const escapeRegex = require("../utils/escapeRegex");
 const { getBookedDates } = require("../services/availability");
 
 /**
@@ -20,8 +21,109 @@ function getImageUrlsFromFiles(files) {
 }
 
 exports.getVenues = asyncHandler(async (req, res) => {
-  const venues = await Venue.find().sort({ createdAt: -1 });
+  const query = req.validated?.query || req.query;
+
+  const {
+    q,
+    location,
+    minCapacity,
+    minPrice,
+    maxPrice,
+    sort = "newest",
+    page = 1,
+    limit = 100,
+  } = query;
+
+  const filter = {};
+
+  if (q) {
+    const escapedQ = escapeRegex(q);
+    filter.$or = [
+      { name: new RegExp(escapedQ, "i") },
+      { location: new RegExp(escapedQ, "i") },
+    ];
+  }
+
+  if (location) {
+    const escapedLoc = escapeRegex(location);
+    filter.location = new RegExp(escapedLoc, "i");
+  }
+
+  if (minCapacity !== undefined) {
+    filter.capacity = { $gte: minCapacity };
+  }
+
+  if (minPrice !== undefined || maxPrice !== undefined) {
+    filter.pricePerDay = {};
+    if (minPrice !== undefined) filter.pricePerDay.$gte = minPrice;
+    if (maxPrice !== undefined) filter.pricePerDay.$lte = maxPrice;
+  }
+
+  let sortOption = { createdAt: -1 };
+  if (sort === "price_asc") {
+    sortOption = { pricePerDay: 1, createdAt: -1 };
+  } else if (sort === "price_desc") {
+    sortOption = { pricePerDay: -1, createdAt: -1 };
+  }
+
+  const totalCount = await Venue.countDocuments(filter);
+  const totalPages = Math.ceil(totalCount / limit) || 1;
+  const skip = (page - 1) * limit;
+
+  const venues = await Venue.find(filter)
+    .sort(sortOption)
+    .skip(skip)
+    .limit(limit);
+
+  res.set("X-Total-Count", String(totalCount));
+  res.set("X-Page", String(page));
+  res.set("X-Limit", String(limit));
+  res.set("X-Total-Pages", String(totalPages));
+  res.set(
+    "Access-Control-Expose-Headers",
+    "X-Total-Count, X-Page, X-Limit, X-Total-Pages"
+  );
+
   res.json(venues);
+});
+
+exports.getVenuesMeta = asyncHandler(async (req, res) => {
+  const distinctLocations = await Venue.distinct("location");
+  const sortedLocations = Array.from(
+    new Set(
+      distinctLocations
+        .map((s) => String(s).trim())
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b))
+    )
+  );
+
+  const stats = await Venue.aggregate([
+    {
+      $group: {
+        _id: null,
+        minPrice: { $min: "$pricePerDay" },
+        maxPrice: { $max: "$pricePerDay" },
+        maxCapacity: { $max: "$capacity" },
+      },
+    },
+  ]);
+
+  if (stats.length === 0) {
+    return res.json({
+      locations: [],
+      minPrice: 0,
+      maxPrice: 0,
+      maxCapacity: 0,
+    });
+  }
+
+  res.json({
+    locations: sortedLocations,
+    minPrice: stats[0].minPrice ?? 0,
+    maxPrice: stats[0].maxPrice ?? 0,
+    maxCapacity: stats[0].maxCapacity ?? 0,
+  });
 });
 
 exports.getOwnerVenues = asyncHandler(async (req, res) => {
@@ -37,12 +139,27 @@ exports.getVenueById = asyncHandler(async (req, res) => {
     throw new ApiError(400, "INVALID_ID", "Invalid venue ID format");
   }
 
-  const venue = await Venue.findById(id);
+  const venue = await Venue.findById(id).populate("ownerId", "name");
   if (!venue) {
     throw new ApiError(404, "NOT_FOUND", "Venue not found");
   }
 
-  res.json(venue);
+  const obj = venue.toObject();
+  let ownerName = "Venue Owner";
+  let ownerStringId = String(venue.ownerId);
+
+  if (venue.ownerId && typeof venue.ownerId === "object") {
+    ownerName = venue.ownerId.name || ownerName;
+    ownerStringId = String(venue.ownerId._id);
+  }
+
+  obj.ownerId = ownerStringId;
+  obj.owner = {
+    id: ownerStringId,
+    name: ownerName,
+  };
+
+  res.json(obj);
 });
 
 exports.getVenueAvailability = asyncHandler(async (req, res) => {

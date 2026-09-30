@@ -28,6 +28,7 @@ const queryFilterSchema = z.object({
   status: z
     .enum(["pending", "approved", "rejected", "cancelled"])
     .optional(),
+  venueId: objectIdSchema.optional(),
 });
 
 module.exports = {

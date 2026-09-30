@@ -22,6 +22,7 @@ app.get("/", (req, res) => {
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/venues", require("./routes/venueRoutes"));
 app.use("/api/bookings", require("./routes/bookingRoutes"));
+app.use("/api/owner", require("./routes/ownerRoutes"));
 
 // Catch 404 for unknown routes
 app.use((req, res, next) => {

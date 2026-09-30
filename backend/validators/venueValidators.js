@@ -80,8 +80,36 @@ const availabilityQuerySchema = z.object({
     .regex(/^\d{4}-(0[1-9]|1[0-2])$/, "Month must be in YYYY-MM format (01-12)"),
 });
 
+const searchQuerySchema = z
+  .object({
+    q: z.string().trim().optional(),
+    location: z.string().trim().optional(),
+    minCapacity: z.coerce.number().min(0).optional(),
+    minPrice: z.coerce.number().min(0).optional(),
+    maxPrice: z.coerce.number().min(0).optional(),
+    sort: z
+      .enum(["price_asc", "price_desc", "newest"])
+      .default("newest"),
+    page: z.coerce.number().int().min(1).default(1),
+    limit: z.coerce.number().int().min(1).max(100).default(100),
+  })
+  .strict()
+  .refine(
+    (data) => {
+      if (data.minPrice !== undefined && data.maxPrice !== undefined) {
+        return data.minPrice <= data.maxPrice;
+      }
+      return true;
+    },
+    {
+      message: "minPrice cannot be greater than maxPrice",
+      path: ["minPrice"],
+    }
+  );
+
 module.exports = {
   createVenueSchema,
   updateVenueSchema,
   availabilityQuerySchema,
+  searchQuerySchema,
 };

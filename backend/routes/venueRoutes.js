@@ -4,6 +4,7 @@ const router = express.Router();
 const {
   createVenue,
   getVenues,
+  getVenuesMeta,
   getOwnerVenues,
   getVenueById,
   getVenueAvailability,
@@ -18,10 +19,14 @@ const {
   createVenueSchema,
   updateVenueSchema,
   availabilityQuerySchema,
+  searchQuerySchema,
 } = require("../validators/venueValidators");
 
-// Public list
-router.get("/", getVenues);
+// Public list with search, filter, sort, pagination
+router.get("/", validate({ query: searchQuerySchema }), getVenues);
+
+// Public metadata for filters (MUST be defined before GET /:id)
+router.get("/meta", getVenuesMeta);
 
 // Owner list (MUST be defined before GET /:id)
 router.get("/mine", protect, authorize("owner"), getOwnerVenues);
@@ -33,7 +38,7 @@ router.get(
   getVenueAvailability
 );
 
-// Public single item
+// Public single item with owner populated
 router.get("/:id", getVenueById);
 
 // Owner management routes

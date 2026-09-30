@@ -5,6 +5,7 @@ const {
   createBooking,
   getUserBookings,
   getOwnerBookings,
+  getBookingById,
   reviewBookingStatus,
   cancelBooking,
 } = require("../controllers/bookingController");
@@ -37,6 +38,9 @@ router.get(
   validate({ query: queryFilterSchema }),
   getOwnerBookings
 );
+
+// Single booking by ID (MUST be defined after /mine and /owner)
+router.get("/:id", protect, getBookingById);
 
 // Owner review (approve / reject)
 router.patch(
