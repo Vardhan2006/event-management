@@ -1,12 +1,23 @@
-import axios from "axios";
+import API from "./api";
 
-const API = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || "http://localhost:5000/api",
-  timeout: 8000,
-});
+export async function getVenues(params = {}) {
+  const response = await API.get("/venues", { params });
+  return {
+    data: response.data,
+    totalCount: parseInt(response.headers["x-total-count"] || "0", 10),
+    page: parseInt(response.headers["x-page"] || "1", 10),
+    limit: parseInt(response.headers["x-limit"] || "100", 10),
+    totalPages: parseInt(response.headers["x-total-pages"] || "1", 10),
+  };
+}
 
-export async function getVenues() {
-  const response = await API.get("/venues");
+export async function getVenuesMeta() {
+  const response = await API.get("/venues/meta");
+  return response.data;
+}
+
+export async function getOwnerVenues() {
+  const response = await API.get("/venues/mine");
   return response.data;
 }
 
@@ -15,37 +26,18 @@ export async function getVenueById(id) {
   return response.data;
 }
 
-/**
- * Create venue with optional image uploads.
- * Pass a FormData instance built in VenueForm (field name "images" for files).
- *
- * Important: Do not set Content-Type manually — the browser/axios must add
- * the multipart boundary. Axios strips a generic "multipart/form-data" header
- * for FormData so the boundary is correct.
- */
-export async function createVenue(formData) {
-  if (!(formData instanceof FormData)) {
-    // eslint-disable-next-line no-console
-    console.warn("[venueService] createVenue expected FormData, got:", typeof formData);
-  } else {
-    // eslint-disable-next-line no-console
-    console.log("[venueService] FormData entries:");
-    for (const [key, value] of formData.entries()) {
-      // eslint-disable-next-line no-console
-      console.log(`  ${key}:`, value instanceof File ? `File(${value.name}, ${value.size}b)` : value);
-    }
-  }
-
-  const response = await API.post("/venues", formData, {
-    // Required for large multipart payloads in some environments
-    maxContentLength: Infinity,
-    maxBodyLength: Infinity
-    // headers: omit — axios sets multipart/form-data + boundary for FormData
+export async function getVenueAvailability(id, month) {
+  const response = await API.get(`/venues/${id}/availability`, {
+    params: { month },
   });
+  return response.data;
+}
 
-  // eslint-disable-next-line no-console
-  console.log("[venueService] createVenue API response:", response.data);
-
+export async function createVenue(formData) {
+  const response = await API.post("/venues", formData, {
+    maxContentLength: Infinity,
+    maxBodyLength: Infinity,
+  });
   return response.data;
 }
 
@@ -57,20 +49,20 @@ export async function updateVenue(id, formData) {
   return response.data;
 }
 
-export async function deleteVenue(id, ownerId) {
-  const response = await API.delete(`/venues/${id}`, {
-    params: { ownerId },
-  });
+export async function deleteVenue(id) {
+  const response = await API.delete(`/venues/${id}`);
   return response.data;
 }
 
 const venueService = {
   getVenues,
+  getVenuesMeta,
+  getOwnerVenues,
   getVenueById,
+  getVenueAvailability,
   createVenue,
   updateVenue,
   deleteVenue,
 };
 
 export default venueService;
-

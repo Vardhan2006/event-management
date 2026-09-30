@@ -1,58 +1,50 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Loader from "../components/common/Loader";
 import BookingCard from "../components/bookings/BookingCard";
 import VenueCard from "../components/venues/VenueCard";
 import VenueForm from "../components/venues/VenueForm";
-import { useAuth } from "../context/AuthContext";
-import eventService from "../services/eventService";
 import venueService from "../services/venueService";
+import bookingService from "../services/bookingService";
 
 function OwnerDashboard() {
-  const { user } = useAuth();
-
-  const ownerId = useMemo(
-    () => user?.id || user?.clerkId || user?.email,
-    [user]
-  );
-
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const [stats, setStats] = useState(null);
   const [venues, setVenues] = useState([]);
   const [bookings, setBookings] = useState([]);
+  const [statusFilter, setStatusFilter] = useState("");
+  const [venueFilter, setVenueFilter] = useState("");
 
   const [showForm, setShowForm] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [selectedVenue, setSelectedVenue] = useState(null);
   const [formSession, setFormSession] = useState(0);
-
   const [savingVenue, setSavingVenue] = useState(false);
 
   const fetchData = useCallback(async () => {
-    if (!ownerId) {
-      setVenues([]);
-      setBookings([]);
-      setLoading(false);
-      return;
-    }
     setLoading(true);
     setError("");
     try {
-      const allVenues = await venueService.getVenues();
-      const filtered = Array.isArray(allVenues)
-        ? allVenues.filter((v) => String(v.ownerId) === String(ownerId))
-        : [];
-      setVenues(filtered);
+      const statsData = await bookingService.getOwnerStats();
+      setStats(statsData);
 
-      const ownerBookings = await eventService.getOwnerBookings(ownerId);
+      const ownerVenues = await venueService.getOwnerVenues();
+      setVenues(Array.isArray(ownerVenues) ? ownerVenues : []);
+
+      const queryParams = {};
+      if (statusFilter) queryParams.status = statusFilter;
+      if (venueFilter) queryParams.venueId = venueFilter;
+
+      const ownerBookings = await bookingService.getOwnerBookings(queryParams);
       setBookings(Array.isArray(ownerBookings) ? ownerBookings : []);
     } catch (err) {
-      console.error(err);
-      setError("We couldn’t load your dashboard data.");
+      const msg = err.response?.data?.error?.message || err.message || "We couldn't load your dashboard data.";
+      setError(msg);
     } finally {
       setLoading(false);
     }
-  }, [ownerId]);
+  }, [statusFilter, venueFilter]);
 
   useEffect(() => {
     fetchData();
@@ -79,15 +71,10 @@ function OwnerDashboard() {
   };
 
   const handleVenueSubmit = async (formData) => {
-    if (!ownerId) {
-      setError("Owner identity is missing. Please sign in again.");
-      return;
-    }
     if (!(formData instanceof FormData)) {
       setError("Invalid form data.");
       return;
     }
-    formData.append("ownerId", ownerId);
 
     setSavingVenue(true);
     setError("");
@@ -101,12 +88,8 @@ function OwnerDashboard() {
       closeForm();
       await fetchData();
     } catch (err) {
-      console.error(err);
-      setError(
-        editMode
-          ? "We couldn’t update this venue. Please try again."
-          : "We couldn’t create this venue. Please try again."
-      );
+      const msg = err.response?.data?.error?.message || err.message || "Couldn't save venue.";
+      setError(msg);
     } finally {
       setSavingVenue(false);
     }
@@ -118,30 +101,29 @@ function OwnerDashboard() {
       return;
     }
     const id = venue?._id || venue?.id;
-    if (!id || !ownerId) return;
+    if (!id) return;
 
     setError("");
     try {
-      await venueService.deleteVenue(id, ownerId);
-      setVenues((prev) =>
-        prev.filter((v) => String(v._id || v.id) !== String(id))
-      );
+      await venueService.deleteVenue(id);
       if (selectedVenue && String(selectedVenue._id || selectedVenue.id) === String(id)) {
         closeForm();
       }
+      await fetchData();
     } catch (err) {
-      console.error(err);
-      setError("We couldn’t delete this venue. Please try again.");
+      const msg = err.response?.data?.error?.message || err.message || "We couldn't delete this venue.";
+      setError(msg);
     }
   };
 
   const handleReviewBooking = async (bookingId, status) => {
+    setError("");
     try {
-      await eventService.reviewBooking(bookingId, { status, ownerId });
+      await bookingService.reviewBookingStatus(bookingId, status);
       await fetchData();
     } catch (err) {
-      console.error(err);
-      setError("We couldn’t update this booking request. Please try again.");
+      const msg = err.response?.data?.error?.message || err.message || "We couldn't update this booking request.";
+      setError(msg);
     }
   };
 
@@ -153,7 +135,7 @@ function OwnerDashboard() {
         <div>
           <h1 className="page-title">Owner dashboard</h1>
           <p className="page-subtitle">
-            Review booking requests, manage venues, and add new listings.
+            Review booking requests, manage venues, and track stats.
           </p>
         </div>
       </div>
@@ -161,25 +143,87 @@ function OwnerDashboard() {
       {loading && <Loader label="Loading owner dashboard..." />}
 
       {!loading && error && (
-        <div className="card owner-dashboard-alert">
-          <div className="card-title">Something went wrong</div>
-          <div className="card-subtitle">{error}</div>
+        <div className="alert alert-error" style={{ marginBottom: 20 }}>
+          <div style={{ fontWeight: "bold" }}>Dashboard Alert</div>
+          <div>{error}</div>
         </div>
       )}
 
       {!loading && (
         <>
-          <section className="card owner-dashboard-section">
-            <div className="card-header">
-              <h2 className="card-title">Booking requests</h2>
-              <p className="card-subtitle">
-                Approve or reject venue booking requests.
-              </p>
+          {/* Stats Overview */}
+          {stats && (
+            <div className="grid grid-3" style={{ marginBottom: 24, gap: 16 }}>
+              <div className="card" style={{ padding: 16, textAlign: "center" }}>
+                <div style={{ fontSize: "2rem", fontWeight: "bold", color: "#6C63FF" }}>
+                  {stats.venues ?? 0}
+                </div>
+                <div className="text-sm text-muted">Total Venues Listed</div>
+              </div>
+
+              <div className="card" style={{ padding: 16, textAlign: "center" }}>
+                <div style={{ fontSize: "2rem", fontWeight: "bold", color: "#e65100" }}>
+                  {stats.bookings?.pending ?? 0}
+                </div>
+                <div className="text-sm text-muted">Pending Requests</div>
+              </div>
+
+              <div className="card" style={{ padding: 16, textAlign: "center" }}>
+                <div style={{ fontSize: "2rem", fontWeight: "bold", color: "#2e7d32" }}>
+                  {stats.bookings?.approved ?? 0}
+                </div>
+                <div className="text-sm text-muted">Approved Bookings</div>
+              </div>
             </div>
+          )}
+
+          {/* Bookings Section */}
+          <section className="card owner-dashboard-section" style={{ marginBottom: 24 }}>
+            <div className="card-header owner-dashboard-section-header" style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+              <div>
+                <h2 className="card-title">Booking requests</h2>
+                <p className="card-subtitle">
+                  Approve or reject venue booking requests.
+                </p>
+              </div>
+
+              {/* Booking Filters */}
+              <div style={{ display: "flex", gap: 10 }}>
+                <select
+                  className="form-select"
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  style={{ width: "auto" }}
+                >
+                  <option value="">All Statuses</option>
+                  <option value="pending">Pending</option>
+                  <option value="approved">Approved</option>
+                  <option value="rejected">Rejected</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+
+                <select
+                  className="form-select"
+                  value={venueFilter}
+                  onChange={(e) => setVenueFilter(e.target.value)}
+                  style={{ width: "auto" }}
+                >
+                  <option value="">All Venues</option>
+                  {venues.map((v) => (
+                    <option key={v._id || v.id} value={v._id || v.id}>
+                      {v.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
             {bookings.length === 0 ? (
-              <p className="text-muted text-sm">No booking requests at the moment.</p>
+              <p className="text-muted text-sm" style={{ padding: 16 }}>
+                No booking requests found.
+              </p>
             ) : (
-              <div className="booking-list">
+              <div className="booking-list" style={{ marginTop: 12 }}>
                 {bookings.map((booking) => (
                   <BookingCard
                     key={booking?._id || booking?.id}
@@ -193,6 +237,7 @@ function OwnerDashboard() {
             )}
           </section>
 
+          {/* Venues Section */}
           <section className="card owner-dashboard-section">
             <div className="card-header owner-dashboard-section-header">
               <div>
@@ -213,11 +258,11 @@ function OwnerDashboard() {
             </div>
 
             {venues.length === 0 ? (
-              <p className="text-muted text-sm">
+              <p className="text-muted text-sm" style={{ padding: 16 }}>
                 No venues yet. Use &quot;+ Add new venue&quot; to create one.
               </p>
             ) : (
-              <div className="grid venues-grid grid-3">
+              <div className="grid venues-grid grid-3" style={{ marginTop: 16 }}>
                 {venues.map((venue) => (
                   <VenueCard
                     key={venue?._id || venue?.id}
@@ -231,8 +276,9 @@ function OwnerDashboard() {
             )}
           </section>
 
+          {/* Form Modal / Section */}
           {showForm && (
-            <section className="owner-dashboard-form-section">
+            <section className="owner-dashboard-form-section" style={{ marginTop: 24 }}>
               <VenueForm
                 syncKey={formSyncKey}
                 isEditMode={editMode}
