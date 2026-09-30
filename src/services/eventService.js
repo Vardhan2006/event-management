@@ -2,7 +2,7 @@ import axios from "axios";
 import { MOCK_EVENTS } from "../utils/constants";
 
 const API = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || "/api",
+  baseURL: process.env.REACT_APP_API_URL || "http://localhost:5000/api",
   timeout: 8000,
 });
 
