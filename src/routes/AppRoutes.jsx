@@ -11,6 +11,8 @@ import VenueDetails from "../pages/VenueDetails";
 import OwnerDashboard from "../pages/OwnerDashboard";
 import MyBookings from "../pages/MyBookings";
 
+import Register from "../pages/Register";
+
 function ProtectedRoute({ children, requiredRole }) {
   const { isAuthenticated, user } = useAuth();
 
@@ -42,6 +44,7 @@ function AppRoutes() {
         }
       />
       <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
       <Route
         path="/dashboard"
         element={

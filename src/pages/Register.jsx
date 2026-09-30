@@ -2,13 +2,15 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-function Login() {
+function Register() {
   const navigate = useNavigate();
-  const { login, isAuthenticated, user } = useAuth();
+  const { register, isAuthenticated, user } = useAuth();
 
-  const [credentials, setCredentials] = useState({
+  const [formData, setFormData] = useState({
+    name: "",
     email: "",
     password: "",
+    role: "user",
   });
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -22,7 +24,7 @@ function Login() {
   }, [isAuthenticated, navigate, user?.role]);
 
   const handleChange = (e) => {
-    setCredentials((prev) => ({
+    setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
     }));
@@ -34,11 +36,11 @@ function Login() {
     setSubmitting(true);
 
     try {
-      const res = await login(credentials.email, credentials.password);
+      const res = await register(formData);
       const userRole = res.user?.role || "user";
       navigate(userRole === "owner" ? "/owner-dashboard" : "/my-bookings");
     } catch (err) {
-      const msg = err.response?.data?.error?.message || err.message || "Login failed";
+      const msg = err.response?.data?.error?.message || err.message || "Registration failed";
       setError(msg);
     } finally {
       setSubmitting(false);
@@ -50,9 +52,9 @@ function Login() {
       <div className="login-container">
         <div className="login-card">
           <div className="login-header">
-            <h1 className="login-title">Welcome Back</h1>
+            <h1 className="login-title">Create Account</h1>
             <p className="login-subtitle">
-              Login to continue booking your perfect venue
+              Sign up to list venues or book your next event space
             </p>
           </div>
 
@@ -64,6 +66,22 @@ function Login() {
 
           <form className="login-form" onSubmit={handleSubmit}>
             <div className="form-group">
+              <label className="form-label" htmlFor="name">
+                Full Name
+              </label>
+              <input
+                id="name"
+                type="text"
+                name="name"
+                className="form-input"
+                placeholder="John Doe"
+                value={formData.name}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            <div className="form-group">
               <label className="form-label" htmlFor="email">
                 Email
               </label>
@@ -73,7 +91,7 @@ function Login() {
                 name="email"
                 className="form-input"
                 placeholder="you@example.com"
-                value={credentials.email}
+                value={formData.email}
                 onChange={handleChange}
                 required
               />
@@ -88,11 +106,27 @@ function Login() {
                 type="password"
                 name="password"
                 className="form-input"
-                placeholder="••••••••"
-                value={credentials.password}
+                placeholder="At least 8 characters"
+                value={formData.password}
                 onChange={handleChange}
                 required
               />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label" htmlFor="role">
+                I want to
+              </label>
+              <select
+                id="role"
+                name="role"
+                className="form-select"
+                value={formData.role}
+                onChange={handleChange}
+              >
+                <option value="user">Book venues (Customer)</option>
+                <option value="owner">List & manage venues (Owner)</option>
+              </select>
             </div>
 
             <button
@@ -100,15 +134,15 @@ function Login() {
               className="btn btn-primary btn-full login-btn"
               disabled={submitting}
             >
-              {submitting ? "Signing in..." : "Login"}
+              {submitting ? "Creating account..." : "Sign Up"}
             </button>
           </form>
 
           <div className="login-footer">
             <p className="login-signup-text">
-              Don't have an account?{" "}
-              <Link to="/register" className="signup-link">
-                Sign up
+              Already have an account?{" "}
+              <Link to="/login" className="signup-link">
+                Log in
               </Link>
             </p>
           </div>
@@ -118,4 +152,4 @@ function Login() {
   );
 }
 
-export default Login;
+export default Register;
