@@ -12,7 +12,25 @@ const errorHandler = require("./middleware/errorHandler");
 const app = express();
 
 app.use(helmet());
-app.use(cors());
+
+const clientOrigins = (process.env.CLIENT_ORIGIN || "http://localhost:3000")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || clientOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new ApiError(403, "CORS_ERROR", "Not allowed by CORS"));
+    },
+    allowedHeaders: ["Authorization", "Content-Type"],
+    exposedHeaders: ["X-Total-Count", "X-Page", "X-Limit", "X-Total-Pages"],
+  })
+);
+
 app.use(express.json());
 
 app.get("/", (req, res) => {

@@ -66,10 +66,26 @@ exports.createBooking = asyncHandler(async (req, res) => {
     eventDate: parsedDate,
     totalPrice: venue.pricePerDay,
     status: "pending",
+    venueSnapshot: {
+      name: venue.name,
+      location: venue.location,
+    },
   });
 
   res.status(201).json(booking);
 });
+
+const formatBooking = (b) => {
+  const doc = b.toObject ? b.toObject() : { ...b };
+  if (!doc.venueId || typeof doc.venueId !== "object" || !doc.venueId.name) {
+    doc.venueId = {
+      _id: doc.venueId ? String(doc.venueId._id || doc.venueId) : null,
+      name: doc.venueSnapshot?.name || "Deleted Venue",
+      location: doc.venueSnapshot?.location || "N/A",
+    };
+  }
+  return doc;
+};
 
 exports.getUserBookings = asyncHandler(async (req, res) => {
   const userId = req.user._id || req.user.id;
@@ -83,7 +99,7 @@ exports.getUserBookings = asyncHandler(async (req, res) => {
     .populate("venueId", "name location")
     .sort({ createdAt: -1 });
 
-  res.json(bookings);
+  res.json(bookings.map(formatBooking));
 });
 
 exports.getOwnerBookings = asyncHandler(async (req, res) => {
@@ -103,7 +119,7 @@ exports.getOwnerBookings = asyncHandler(async (req, res) => {
     .populate("userId", "name email")
     .sort({ createdAt: -1 });
 
-  res.json(bookings);
+  res.json(bookings.map(formatBooking));
 });
 
 exports.getBookingById = asyncHandler(async (req, res) => {
@@ -133,7 +149,7 @@ exports.getBookingById = asyncHandler(async (req, res) => {
     );
   }
 
-  res.json(booking);
+  res.json(formatBooking(booking));
 });
 
 exports.reviewBookingStatus = asyncHandler(async (req, res) => {

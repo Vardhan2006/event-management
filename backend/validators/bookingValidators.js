@@ -22,14 +22,14 @@ const updateStatusSchema = z.object({
   status: z.enum(["approved", "rejected"], {
     errorMap: () => ({ message: "Status must be 'approved' or 'rejected'" }),
   }),
-});
+}).strict();
 
 const queryFilterSchema = z.object({
   status: z
     .enum(["pending", "approved", "rejected", "cancelled"])
     .optional(),
   venueId: objectIdSchema.optional(),
-});
+}).strict();
 
 module.exports = {
   createBookingSchema,

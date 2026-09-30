@@ -21,6 +21,7 @@ const {
   availabilityQuerySchema,
   searchQuerySchema,
 } = require("../validators/venueValidators");
+const { idParamSchema } = require("../validators/commonValidators");
 
 // Public list with search, filter, sort, pagination
 router.get("/", validate({ query: searchQuerySchema }), getVenues);
@@ -60,6 +61,11 @@ router.patch(
   updateVenue
 );
 
-router.delete("/:id", protect, authorize("owner"), deleteVenue);
+router.delete(
+  "/:id",
+  protect,
+  authorize("owner"),
+  deleteVenue
+);
 
 module.exports = router;

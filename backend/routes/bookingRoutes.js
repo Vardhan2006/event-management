@@ -17,6 +17,7 @@ const {
   updateStatusSchema,
   queryFilterSchema,
 } = require("../validators/bookingValidators");
+const { idParamSchema } = require("../validators/commonValidators");
 
 // User booking creation
 router.post(

@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Venue = require("../models/Venue");
+const Booking = require("../models/Booking");
 const ApiError = require("../utils/ApiError");
 const asyncHandler = require("../utils/asyncHandler");
 const escapeRegex = require("../utils/escapeRegex");
@@ -283,6 +284,31 @@ exports.deleteVenue = asyncHandler(async (req, res) => {
     );
   }
 
+  // Check for upcoming approved bookings (eventDate >= today UTC midnight)
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+
+  const upcomingApprovedBooking = await Booking.findOne({
+    venueId: id,
+    status: "approved",
+    eventDate: { $gte: today },
+  });
+
+  if (upcomingApprovedBooking) {
+    throw new ApiError(
+      409,
+      "VENUE_HAS_UPCOMING_BOOKINGS",
+      "Cannot delete venue with upcoming approved bookings"
+    );
+  }
+
+  // Set all pending bookings for that venue to "cancelled"
+  await Booking.updateMany(
+    { venueId: id, status: "pending" },
+    { $set: { status: "cancelled" } }
+  );
+
+  // Keep historical bookings, delete venue
   await venue.deleteOne();
 
   res.json({ message: "Venue deleted", id });

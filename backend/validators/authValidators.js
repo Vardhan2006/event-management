@@ -20,7 +20,7 @@ const registerSchema = z.object({
       errorMap: () => ({ message: "Role must be 'user' or 'owner'" }),
     })
     .optional(),
-});
+}).strict();
 
 const loginSchema = z.object({
   email: z
@@ -31,7 +31,7 @@ const loginSchema = z.object({
   password: z
     .string({ required_error: "Password is required" })
     .min(1, "Password is required"),
-});
+}).strict();
 
 module.exports = {
   registerSchema,

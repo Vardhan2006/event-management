@@ -55,7 +55,7 @@ const createVenueSchema = z.object({
     .min(0, "Price per day must be at least 0"),
   services: servicesSchema.optional(),
   ownerId: z.any().optional(),
-});
+}).strict();
 
 const updateVenueSchema = z.object({
   name: z.string().trim().min(1, "Name cannot be empty").optional(),
@@ -72,13 +72,13 @@ const updateVenueSchema = z.object({
   services: servicesSchema.optional(),
   existingImages: existingImagesSchema,
   ownerId: z.any().optional(),
-});
+}).strict();
 
 const availabilityQuerySchema = z.object({
   month: z
     .string({ required_error: "Month is required" })
     .regex(/^\d{4}-(0[1-9]|1[0-2])$/, "Month must be in YYYY-MM format (01-12)"),
-});
+}).strict();
 
 const searchQuerySchema = z
   .object({

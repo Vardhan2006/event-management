@@ -44,6 +44,16 @@ const BookingSchema = new mongoose.Schema({
     default: "pending",
     index: true,
   },
+  venueSnapshot: {
+    name: {
+      type: String,
+      trim: true,
+    },
+    location: {
+      type: String,
+      trim: true,
+    },
+  },
   createdAt: {
     type: Date,
     default: Date.now,
