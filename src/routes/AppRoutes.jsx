@@ -1,17 +1,12 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import Home from "../pages/Home";
-import Events from "../pages/Events";
-import CreateEvent from "../pages/CreateEvent";
-import EventDetails from "../pages/EventDetails";
 import Login from "../pages/Login";
-import Dashboard from "../pages/Dashboard";
-import { useAuth } from "../context/AuthContext";
+import Register from "../pages/Register";
 import Venues from "../pages/Venues";
 import VenueDetails from "../pages/VenueDetails";
 import OwnerDashboard from "../pages/OwnerDashboard";
 import MyBookings from "../pages/MyBookings";
-
-import Register from "../pages/Register";
+import { useAuth } from "../context/AuthContext";
 
 function ProtectedRoute({ children, requiredRole }) {
   const { isAuthenticated, user } = useAuth();
@@ -21,7 +16,7 @@ function ProtectedRoute({ children, requiredRole }) {
   }
 
   if (requiredRole && user?.role !== requiredRole) {
-    return <Navigate to="/my-bookings" replace />;
+    return <Navigate to={user?.role === "owner" ? "/owner-dashboard" : "/my-bookings"} replace />;
   }
 
   return children;
@@ -33,26 +28,8 @@ function AppRoutes() {
       <Route path="/" element={<Home />} />
       <Route path="/venues" element={<Venues />} />
       <Route path="/venues/:id" element={<VenueDetails />} />
-      <Route path="/events" element={<Events />} />
-      <Route path="/events/:id" element={<EventDetails />} />
-      <Route
-        path="/create-event"
-        element={
-          <ProtectedRoute>
-            <CreateEvent />
-          </ProtectedRoute>
-        }
-      />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
       <Route
         path="/owner-dashboard"
         element={
