@@ -1,6 +1,11 @@
 const mongoose = require("mongoose");
 const { MongoMemoryServer } = require("mongodb-memory-server");
 
+process.env.JWT_SECRET =
+  process.env.JWT_SECRET ||
+  "test_jwt_secret_64_character_hex_string_for_testing_purposes_only_12345";
+process.env.JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
+
 let mongod = null;
 
 const connectDB = async () => {
