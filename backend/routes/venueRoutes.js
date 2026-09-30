@@ -6,6 +6,7 @@ const {
   getVenues,
   getOwnerVenues,
   getVenueById,
+  getVenueAvailability,
   updateVenue,
   deleteVenue,
 } = require("../controllers/venueController");
@@ -16,6 +17,7 @@ const validate = require("../middleware/validate");
 const {
   createVenueSchema,
   updateVenueSchema,
+  availabilityQuerySchema,
 } = require("../validators/venueValidators");
 
 // Public list
@@ -23,6 +25,13 @@ router.get("/", getVenues);
 
 // Owner list (MUST be defined before GET /:id)
 router.get("/mine", protect, authorize("owner"), getOwnerVenues);
+
+// Public availability endpoint (MUST be defined before GET /:id)
+router.get(
+  "/:id/availability",
+  validate({ query: availabilityQuerySchema }),
+  getVenueAvailability
+);
 
 // Public single item
 router.get("/:id", getVenueById);

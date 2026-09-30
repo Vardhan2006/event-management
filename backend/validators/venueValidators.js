@@ -74,7 +74,14 @@ const updateVenueSchema = z.object({
   ownerId: z.any().optional(),
 });
 
+const availabilityQuerySchema = z.object({
+  month: z
+    .string({ required_error: "Month is required" })
+    .regex(/^\d{4}-(0[1-9]|1[0-2])$/, "Month must be in YYYY-MM format (01-12)"),
+});
+
 module.exports = {
   createVenueSchema,
   updateVenueSchema,
+  availabilityQuerySchema,
 };

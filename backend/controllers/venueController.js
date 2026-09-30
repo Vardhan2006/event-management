@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const Venue = require("../models/Venue");
 const ApiError = require("../utils/ApiError");
 const asyncHandler = require("../utils/asyncHandler");
+const { getBookedDates } = require("../services/availability");
 
 /**
  * Safely extract Cloudinary URLs from multer-storage-cloudinary file objects.
@@ -42,6 +43,40 @@ exports.getVenueById = asyncHandler(async (req, res) => {
   }
 
   res.json(venue);
+});
+
+exports.getVenueAvailability = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new ApiError(400, "INVALID_ID", "Invalid venue ID format");
+  }
+
+  const venue = await Venue.findById(id);
+  if (!venue) {
+    throw new ApiError(404, "NOT_FOUND", "Venue not found");
+  }
+
+  const monthStr = req.validated?.query?.month || req.query.month;
+  if (!monthStr) {
+    throw new ApiError(
+      400,
+      "VALIDATION_ERROR",
+      "Month query parameter is required"
+    );
+  }
+
+  const [yearStr, monthNumStr] = monthStr.split("-");
+  const year = parseInt(yearStr, 10);
+  const month = parseInt(monthNumStr, 10);
+
+  const bookedDates = await getBookedDates(id, year, month);
+
+  res.json({
+    venueId: id,
+    month: monthStr,
+    bookedDates,
+  });
 });
 
 exports.createVenue = asyncHandler(async (req, res) => {

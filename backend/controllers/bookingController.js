@@ -4,6 +4,7 @@ const Venue = require("../models/Venue");
 const ApiError = require("../utils/ApiError");
 const asyncHandler = require("../utils/asyncHandler");
 const { parseDateOnly, isPast } = require("../utils/dates");
+const { isDateAvailable } = require("../services/availability");
 
 exports.createBooking = asyncHandler(async (req, res) => {
   const { venueId, eventDate, title, notes } = req.validated?.body || req.body;
@@ -31,12 +32,8 @@ exports.createBooking = asyncHandler(async (req, res) => {
   }
 
   // Check if date is already approved for that venue
-  const approvedBooking = await Booking.findOne({
-    venueId,
-    eventDate: parsedDate,
-    status: "approved",
-  });
-  if (approvedBooking) {
+  const available = await isDateAvailable(venueId, parsedDate);
+  if (!available) {
     throw new ApiError(
       409,
       "DATE_UNAVAILABLE",
