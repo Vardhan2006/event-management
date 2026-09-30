@@ -1,26 +1,51 @@
 const express = require("express");
 const router = express.Router();
 
-// ✅ Import controller
 const {
   createVenue,
   getVenues,
+  getOwnerVenues,
   getVenueById,
   updateVenue,
-  deleteVenue
+  deleteVenue,
 } = require("../controllers/venueController");
 
-// ✅ Import upload middleware
+const { protect, authorize } = require("../middleware/auth");
 const upload = require("../middleware/upload");
+const validate = require("../middleware/validate");
+const {
+  createVenueSchema,
+  updateVenueSchema,
+} = require("../validators/venueValidators");
 
-// 🔥 POST with image upload
-router.post("/", upload.array("images", 5), createVenue);
-
+// Public list
 router.get("/", getVenues);
 
-router.patch("/:id", upload.array("images", 5), updateVenue);
-router.delete("/:id", deleteVenue);
+// Owner list (MUST be defined before GET /:id)
+router.get("/mine", protect, authorize("owner"), getOwnerVenues);
 
+// Public single item
 router.get("/:id", getVenueById);
+
+// Owner management routes
+router.post(
+  "/",
+  protect,
+  authorize("owner"),
+  upload.array("images", 5),
+  validate({ body: createVenueSchema }),
+  createVenue
+);
+
+router.patch(
+  "/:id",
+  protect,
+  authorize("owner"),
+  upload.array("images", 5),
+  validate({ body: updateVenueSchema }),
+  updateVenue
+);
+
+router.delete("/:id", protect, authorize("owner"), deleteVenue);
 
 module.exports = router;

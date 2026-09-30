@@ -1,0 +1,80 @@
+const { z } = require("zod");
+
+const servicesSchema = z.preprocess((val) => {
+  if (val == null || val === "") return [];
+  if (Array.isArray(val)) return val.map(String).map((s) => s.trim()).filter(Boolean);
+  if (typeof val === "string") {
+    try {
+      const parsed = JSON.parse(val);
+      if (Array.isArray(parsed)) {
+        return parsed.map(String).map((s) => s.trim()).filter(Boolean);
+      }
+    } catch {
+      // not JSON — treat as comma-separated
+    }
+    return val
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+  return [];
+}, z.array(z.string()));
+
+const existingImagesSchema = z.preprocess((val) => {
+  if (val == null || val === "") return undefined;
+  if (Array.isArray(val)) return val.map(String).filter(Boolean);
+  if (typeof val === "string") {
+    try {
+      const parsed = JSON.parse(val);
+      if (Array.isArray(parsed)) return parsed.map(String).filter(Boolean);
+    } catch {
+      return [val];
+    }
+  }
+  return undefined;
+}, z.array(z.string()).optional());
+
+const createVenueSchema = z.object({
+  name: z
+    .string({ required_error: "Name is required" })
+    .trim()
+    .min(1, "Name is required"),
+  location: z
+    .string({ required_error: "Location is required" })
+    .trim()
+    .min(1, "Location is required"),
+  description: z
+    .string({ required_error: "Description is required" })
+    .trim()
+    .min(1, "Description is required"),
+  capacity: z.coerce
+    .number({ invalid_type_error: "Capacity must be a number" })
+    .min(0, "Capacity must be at least 0"),
+  pricePerDay: z.coerce
+    .number({ invalid_type_error: "Price per day must be a number" })
+    .min(0, "Price per day must be at least 0"),
+  services: servicesSchema.optional(),
+  ownerId: z.any().optional(),
+});
+
+const updateVenueSchema = z.object({
+  name: z.string().trim().min(1, "Name cannot be empty").optional(),
+  location: z.string().trim().min(1, "Location cannot be empty").optional(),
+  description: z.string().trim().min(1, "Description cannot be empty").optional(),
+  capacity: z.coerce
+    .number({ invalid_type_error: "Capacity must be a number" })
+    .min(0, "Capacity must be at least 0")
+    .optional(),
+  pricePerDay: z.coerce
+    .number({ invalid_type_error: "Price per day must be a number" })
+    .min(0, "Price per day must be at least 0")
+    .optional(),
+  services: servicesSchema.optional(),
+  existingImages: existingImagesSchema,
+  ownerId: z.any().optional(),
+});
+
+module.exports = {
+  createVenueSchema,
+  updateVenueSchema,
+};

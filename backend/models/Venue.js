@@ -4,56 +4,56 @@ const VenueSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
   },
 
   location: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
+    index: true,
   },
 
   capacity: {
     type: Number,
     required: true,
-    min: 0
+    min: 0,
   },
 
   pricePerDay: {
     type: Number,
     required: true,
-    min: 0
+    min: 0,
+    index: true,
   },
 
   description: {
     type: String,
-    required: true
+    required: true,
   },
 
-  // Example: ["catering", "decoration"]
   services: {
     type: [String],
-    default: []
+    default: [],
   },
 
-  // Clerk user id of the venue owner
   ownerId: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
     required: true,
-    index: true
+    index: true,
   },
 
   createdAt: {
     type: Date,
-    default: Date.now
+    default: Date.now,
   },
 
   images: [
     {
-      type: String
-    }
+      type: String,
+    },
   ],
 });
 
 module.exports = mongoose.model("Venue", VenueSchema);
-
