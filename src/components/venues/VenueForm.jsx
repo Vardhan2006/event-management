@@ -28,6 +28,14 @@ function VenueForm({
   const initialValuesRef = useRef(initialValues);
   initialValuesRef.current = initialValues;
 
+  // Lock body scroll while modal is open
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, []);
+
   useEffect(() => {
     const iv = initialValuesRef.current || {};
     setFormData({
@@ -87,160 +95,204 @@ function VenueForm({
     onSubmit(fd);
   };
 
-  const title = isEditMode ? "Edit venue" : "Create a venue";
-  const subtitle = isEditMode
-    ? "Update your listing. New photos are added to your existing images."
-    : "Add your space so people can request bookings.";
-  const submitLabel = isEditMode ? "Update venue" : "Create venue";
+  const title = isEditMode ? "Edit Venue Listing" : "Create New Venue";
+  const submitLabel = isEditMode ? "Update Venue" : "Save & Publish Venue";
 
   return (
-    <form className="form card venue-form" onSubmit={handleSubmit}>
-      <div className="venue-form-header-row">
-        <div>
-          <div className="form-title">{title}</div>
-          <div className="form-subtitle">{subtitle}</div>
+    <div
+      className="modal-overlay"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && onCancel) {
+          onCancel();
+        }
+      }}
+    >
+      <div className="modal-panel">
+        {/* Sticky Header */}
+        <div className="modal-header">
+          <div>
+            <span className="eyebrow">{isEditMode ? "Update Listing" : "New Property"}</span>
+            <h2 style={{ fontSize: 24, fontWeight: 900 }}>{title}</h2>
+          </div>
+          {onCancel && (
+            <button
+              type="button"
+              className="modal-close-btn"
+              onClick={onCancel}
+              disabled={isSubmitting}
+              aria-label="Close modal"
+            >
+              ✕
+            </button>
+          )}
         </div>
-        {onCancel && (
+
+        {/* Modal Body Form */}
+        <form id="venue-modal-form" onSubmit={handleSubmit} className="modal-body stack-lg">
+          {/* Current Images Preview */}
+          {isEditMode && initialValues?.images?.length > 0 && (
+            <div className="field">
+              <span className="eyebrow">Current Photos</span>
+              <div className="row-wrap" style={{ gap: 10, marginTop: 6 }}>
+                {initialValues.images.slice(0, 5).map((url) => (
+                  <img
+                    key={url}
+                    src={url}
+                    alt=""
+                    style={{ width: 72, height: 54, borderRadius: 8, objectFit: "cover", border: "1px solid var(--line-soft)" }}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Image Upload Dropzone Style */}
+          <div className="field">
+            <label htmlFor="venue-images">
+              {isEditMode ? "Upload Additional Photos (Optional)" : `Photos (up to ${MAX_IMAGES})`}
+            </label>
+            <div
+              style={{
+                border: "2px dashed var(--line-soft)",
+                borderRadius: "var(--radius-card)",
+                padding: "20px",
+                textAlign: "center",
+                backgroundColor: "var(--bg)",
+                cursor: "pointer",
+              }}
+            >
+              <input
+                id="venue-images"
+                name="images"
+                type="file"
+                accept="image/jpeg,image/png,image/jpg,image/webp,image/gif"
+                multiple
+                className="input"
+                style={{ cursor: "pointer", height: "auto", padding: "10px" }}
+                onChange={handleFilesChange}
+              />
+              <p className="text-sm text-muted" style={{ marginTop: 8 }}>
+                Accepted formats: JPG, PNG, WEBP. Max {MAX_IMAGES} files.
+              </p>
+            </div>
+            {imageFiles.length > 0 && (
+              <p className="text-sm text-ink font-semibold" style={{ marginTop: 6 }}>
+                ✓ {imageFiles.length} new photo(s) selected
+              </p>
+            )}
+          </div>
+
+          {/* Form Fields Grid */}
+          <div className="grid-2">
+            <div className="field">
+              <label htmlFor="name">Venue Name</label>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                className="input"
+                placeholder="e.g. Grand Horizon Ballroom"
+                value={formData.name}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            <div className="field">
+              <label htmlFor="location">Location / City</label>
+              <input
+                id="location"
+                name="location"
+                type="text"
+                className="input"
+                placeholder="e.g. New York, NY"
+                value={formData.location}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            <div className="field">
+              <label htmlFor="capacity">Guest Capacity</label>
+              <input
+                id="capacity"
+                name="capacity"
+                type="number"
+                min="0"
+                className="input"
+                placeholder="e.g. 250"
+                value={formData.capacity}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            <div className="field">
+              <label htmlFor="pricePerDay">Price Per Day ($)</label>
+              <input
+                id="pricePerDay"
+                name="pricePerDay"
+                type="number"
+                min="0"
+                step="0.01"
+                className="input"
+                placeholder="e.g. 1500"
+                value={formData.pricePerDay}
+                onChange={handleChange}
+              />
+            </div>
+          </div>
+
+          <div className="field">
+            <label htmlFor="description">Full Description</label>
+            <textarea
+              id="description"
+              name="description"
+              className="textarea"
+              placeholder="Describe venue highlights, dimensions, parking, and rules..."
+              value={formData.description}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="field">
+            <label htmlFor="services">Services & Amenities (Comma-Separated)</label>
+            <input
+              id="services"
+              name="services"
+              type="text"
+              className="input"
+              placeholder="Catering, Stage, WiFi, Projector, Sound System"
+              value={formData.services}
+              onChange={handleChange}
+            />
+          </div>
+        </form>
+
+        {/* Sticky Footer */}
+        <div className="modal-footer">
+          {onCancel && (
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={onCancel}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </button>
+          )}
           <button
-            type="button"
-            className="btn btn-ghost"
-            onClick={onCancel}
+            type="submit"
+            form="venue-modal-form"
+            className="btn btn-primary"
             disabled={isSubmitting}
           >
-            Close
+            {isSubmitting ? "Saving Venue..." : submitLabel}
           </button>
-        )}
-      </div>
-
-      {isEditMode && initialValues?.images?.length > 0 && (
-        <div className="form-group">
-          <span className="form-label">Current photos</span>
-          <div className="venue-form-existing-images">
-            {initialValues.images.slice(0, 5).map((url) => (
-              <img key={url} src={url} alt="" className="venue-form-thumb" />
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div className="form-group">
-        <label className="form-label" htmlFor="venue-images">
-          {isEditMode ? "Add more photos (optional)" : `Photos (up to ${MAX_IMAGES})`}
-        </label>
-        <input
-          id="venue-images"
-          name="images"
-          type="file"
-          accept="image/jpeg,image/png,image/jpg,image/webp,image/gif"
-          multiple
-          className="form-input"
-          onChange={handleFilesChange}
-        />
-        {imageFiles.length > 0 && (
-          <p className="text-sm text-muted" style={{ marginTop: 8 }}>
-            {imageFiles.length} new file(s) selected
-          </p>
-        )}
-      </div>
-
-      <div className="form-group">
-        <label className="form-label" htmlFor="name">
-          Venue name
-        </label>
-        <input
-          id="name"
-          name="name"
-          className="form-input"
-          value={formData.name}
-          onChange={handleChange}
-          required
-        />
-      </div>
-
-      <div className="form-group">
-        <label className="form-label" htmlFor="location">
-          Location
-        </label>
-        <input
-          id="location"
-          name="location"
-          className="form-input"
-          value={formData.location}
-          onChange={handleChange}
-          required
-        />
-      </div>
-
-      <div className="grid venue-form-grid">
-        <div className="form-group">
-          <label className="form-label" htmlFor="capacity">
-            Capacity
-          </label>
-          <input
-            id="capacity"
-            name="capacity"
-            type="number"
-            min="0"
-            className="form-input"
-            value={formData.capacity}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        <div className="form-group">
-          <label className="form-label" htmlFor="pricePerDay">
-            Price per day
-          </label>
-          <input
-            id="pricePerDay"
-            name="pricePerDay"
-            type="number"
-            min="0"
-            step="0.01"
-            className="form-input"
-            value={formData.pricePerDay}
-            onChange={handleChange}
-          />
         </div>
       </div>
-
-      <div className="form-group">
-        <label className="form-label" htmlFor="description">
-          Description
-        </label>
-        <textarea
-          id="description"
-          name="description"
-          className="form-textarea"
-          value={formData.description}
-          onChange={handleChange}
-          required
-        />
-      </div>
-
-      <div className="form-group">
-        <label className="form-label" htmlFor="services">
-          Services (comma-separated)
-        </label>
-        <input
-          id="services"
-          name="services"
-          className="form-input"
-          placeholder="catering, decoration"
-          value={formData.services}
-          onChange={handleChange}
-        />
-      </div>
-
-      <button
-        type="submit"
-        className="btn btn-primary btn-full"
-        disabled={isSubmitting}
-      >
-        {isSubmitting ? "Saving..." : submitLabel}
-      </button>
-    </form>
+    </div>
   );
 }
 

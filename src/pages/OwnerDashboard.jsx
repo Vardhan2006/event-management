@@ -129,101 +129,130 @@ function OwnerDashboard() {
 
   const formSyncKey = `${formSession}-${editMode}-${selectedVenue?._id || selectedVenue?.id || "new"}`;
 
+  const pendingCount = stats?.bookings?.pending ?? 0;
+  const approvedCount = stats?.bookings?.approved ?? 0;
+  const rejectedCount = stats?.bookings?.rejected ?? 0;
+  const cancelledCount = stats?.bookings?.cancelled ?? 0;
+  const totalBookingsCount = pendingCount + approvedCount + rejectedCount + cancelledCount;
+
   return (
-    <div className="page owner-dashboard">
-      <div className="page-header">
+    <div className="container stack-lg" style={{ paddingTop: 40, paddingBottom: 64 }}>
+      {/* Page Header */}
+      <div className="row-between">
         <div>
-          <h1 className="page-title">Owner dashboard</h1>
-          <p className="page-subtitle">
-            Review booking requests, manage venues, and track stats.
-          </p>
+          <span className="eyebrow">Owner Control Panel</span>
+          <h1 style={{ fontSize: "clamp(32px, 5vw, 48px)", marginTop: 4 }}>Owner Dashboard</h1>
+          <p className="text-muted">Manage your venue listings, review customer booking requests, and track stats.</p>
         </div>
+
+        <button
+          type="button"
+          className="btn btn-accent btn-lg"
+          onClick={openCreateForm}
+        >
+          + Add Venue <span>→</span>
+        </button>
       </div>
 
       {loading && <Loader label="Loading owner dashboard..." />}
 
       {!loading && error && (
-        <div className="alert alert-error" style={{ marginBottom: 20 }}>
-          <div style={{ fontWeight: "bold" }}>Dashboard Alert</div>
-          <div>{error}</div>
+        <div className="alert alert-danger">
+          <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span>{error}</span>
         </div>
       )}
 
       {!loading && (
         <>
-          {/* Stats Overview */}
+          {/* Pastel Stat Cards Row */}
           {stats && (
-            <div className="grid grid-3" style={{ marginBottom: 24, gap: 16 }}>
-              <div className="card" style={{ padding: 16, textAlign: "center" }}>
-                <div style={{ fontSize: "2rem", fontWeight: "bold", color: "#6C63FF" }}>
-                  {stats.venues ?? 0}
-                </div>
-                <div className="text-sm text-muted">Total Venues Listed</div>
+            <div className="stats-grid">
+              <div className="stat-card card-pastel-purple">
+                <span className="eyebrow" style={{ color: "var(--ink)" }}>Venues Listed</span>
+                <span className="stat-number">{stats.venues ?? 0}</span>
+                <span className="text-xs" style={{ color: "rgba(10,10,11,0.7)" }}>Active properties</span>
               </div>
 
-              <div className="card" style={{ padding: 16, textAlign: "center" }}>
-                <div style={{ fontSize: "2rem", fontWeight: "bold", color: "#e65100" }}>
-                  {stats.bookings?.pending ?? 0}
-                </div>
-                <div className="text-sm text-muted">Pending Requests</div>
+              <div className="stat-card card-pastel-peach">
+                <span className="eyebrow" style={{ color: "var(--ink)" }}>Pending Requests</span>
+                <span className="stat-number">{pendingCount}</span>
+                <span className="text-xs" style={{ color: "rgba(10,10,11,0.7)" }}>Action required</span>
               </div>
 
-              <div className="card" style={{ padding: 16, textAlign: "center" }}>
-                <div style={{ fontSize: "2rem", fontWeight: "bold", color: "#2e7d32" }}>
-                  {stats.bookings?.approved ?? 0}
-                </div>
-                <div className="text-sm text-muted">Approved Bookings</div>
+              <div className="stat-card card-pastel-green">
+                <span className="eyebrow" style={{ color: "var(--ink)" }}>Approved</span>
+                <span className="stat-number">{approvedCount}</span>
+                <span className="text-xs" style={{ color: "rgba(10,10,11,0.7)" }}>Confirmed dates</span>
+              </div>
+
+              <div className="stat-card card-pastel-pink">
+                <span className="eyebrow" style={{ color: "var(--ink)" }}>Rejected</span>
+                <span className="stat-number">{rejectedCount}</span>
+                <span className="text-xs" style={{ color: "rgba(10,10,11,0.7)" }}>Declined requests</span>
+              </div>
+
+              <div className="stat-card card-pastel-mint">
+                <span className="eyebrow" style={{ color: "var(--ink)" }}>Total Requests</span>
+                <span className="stat-number">{totalBookingsCount}</span>
+                <span className="text-xs" style={{ color: "rgba(10,10,11,0.7)" }}>All time</span>
               </div>
             </div>
           )}
 
-          {/* Bookings Section */}
-          <section className="card owner-dashboard-section" style={{ marginBottom: 24 }}>
-            <div className="card-header owner-dashboard-section-header" style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+          {/* Booking Requests Section */}
+          <section className="card stack-lg">
+            <div className="row-between" style={{ alignItems: "flex-end" }}>
               <div>
-                <h2 className="card-title">Booking requests</h2>
-                <p className="card-subtitle">
-                  Approve or reject venue booking requests.
-                </p>
+                <span className="eyebrow">Customer Requests</span>
+                <h2 style={{ fontSize: 28, marginTop: 2 }}>Booking Requests</h2>
+                <p className="text-muted text-sm">Review, approve, or reject date requests submitted by users.</p>
               </div>
 
-              {/* Booking Filters */}
-              <div style={{ display: "flex", gap: 10 }}>
-                <select
-                  className="form-select"
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  style={{ width: "auto" }}
-                >
-                  <option value="">All Statuses</option>
-                  <option value="pending">Pending</option>
-                  <option value="approved">Approved</option>
-                  <option value="rejected">Rejected</option>
-                  <option value="cancelled">Cancelled</option>
-                </select>
+              {/* Filters */}
+              <div className="row" style={{ gap: 12 }}>
+                <div className="field" style={{ width: "auto" }}>
+                  <span className="eyebrow" style={{ fontSize: 10 }}>Filter Status</span>
+                  <select
+                    className="select"
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    style={{ height: 40, fontSize: 14 }}
+                  >
+                    <option value="">All Statuses</option>
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                </div>
 
-                <select
-                  className="form-select"
-                  value={venueFilter}
-                  onChange={(e) => setVenueFilter(e.target.value)}
-                  style={{ width: "auto" }}
-                >
-                  <option value="">All Venues</option>
-                  {venues.map((v) => (
-                    <option key={v._id || v.id} value={v._id || v.id}>
-                      {v.name}
-                    </option>
-                  ))}
-                </select>
+                <div className="field" style={{ width: "auto" }}>
+                  <span className="eyebrow" style={{ fontSize: 10 }}>Filter Venue</span>
+                  <select
+                    className="select"
+                    value={venueFilter}
+                    onChange={(e) => setVenueFilter(e.target.value)}
+                    style={{ height: 40, fontSize: 14 }}
+                  >
+                    <option value="">All Venues</option>
+                    {venues.map((v) => (
+                      <option key={v._id || v.id} value={v._id || v.id}>
+                        {v.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
 
             {bookings.length === 0 ? (
-              <p className="text-muted text-sm" style={{ padding: 16 }}>
-                No booking requests found.
-              </p>
+              <div className="empty-state" style={{ padding: 32 }}>
+                <h3>No Requests Found</h3>
+                <p className="text-muted text-sm">There are no booking requests matching your selected filters.</p>
+              </div>
             ) : (
-              <div className="booking-list" style={{ marginTop: 12 }}>
+              <div className="grid-2">
                 {bookings.map((booking) => (
                   <BookingCard
                     key={booking?._id || booking?.id}
@@ -237,32 +266,34 @@ function OwnerDashboard() {
             )}
           </section>
 
-          {/* Venues Section */}
-          <section className="card owner-dashboard-section">
-            <div className="card-header owner-dashboard-section-header">
+          {/* My Venues Section */}
+          <section className="card stack-lg">
+            <div className="row-between">
               <div>
-                <h2 className="card-title">My venues</h2>
-                <p className="card-subtitle">
-                  Venues you have listed. Edit, delete, or view public details.
-                </p>
+                <span className="eyebrow">Property Portfolio</span>
+                <h2 style={{ fontSize: 28, marginTop: 2 }}>My Venues</h2>
+                <p className="text-muted text-sm">Properties you currently have listed on EventFlow.</p>
               </div>
-              {!showForm && (
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={openCreateForm}
-                >
-                  + Add new venue
-                </button>
-              )}
+
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={openCreateForm}
+              >
+                + Add Venue
+              </button>
             </div>
 
             {venues.length === 0 ? (
-              <p className="text-muted text-sm" style={{ padding: 16 }}>
-                No venues yet. Use &quot;+ Add new venue&quot; to create one.
-              </p>
+              <div className="empty-state" style={{ padding: 32 }}>
+                <h3>No Venues Listed Yet</h3>
+                <p className="text-muted text-sm">Click "+ Add Venue" to list your first space for bookings.</p>
+                <button type="button" className="btn btn-primary" onClick={openCreateForm}>
+                  Add Your First Venue
+                </button>
+              </div>
             ) : (
-              <div className="grid venues-grid grid-3" style={{ marginTop: 16 }}>
+              <div className="grid-3">
                 {venues.map((venue) => (
                   <VenueCard
                     key={venue?._id || venue?.id}
@@ -276,18 +307,16 @@ function OwnerDashboard() {
             )}
           </section>
 
-          {/* Form Modal / Section */}
+          {/* Venue Form Modal */}
           {showForm && (
-            <section className="owner-dashboard-form-section" style={{ marginTop: 24 }}>
-              <VenueForm
-                syncKey={formSyncKey}
-                isEditMode={editMode}
-                initialValues={editMode && selectedVenue ? selectedVenue : {}}
-                onSubmit={handleVenueSubmit}
-                onCancel={closeForm}
-                isSubmitting={savingVenue}
-              />
-            </section>
+            <VenueForm
+              syncKey={formSyncKey}
+              isEditMode={editMode}
+              initialValues={editMode && selectedVenue ? selectedVenue : {}}
+              onSubmit={handleVenueSubmit}
+              onCancel={closeForm}
+              isSubmitting={savingVenue}
+            />
           )}
         </>
       )}

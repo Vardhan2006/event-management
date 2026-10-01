@@ -1,8 +1,17 @@
 import { useEffect, useState, useCallback } from "react";
+import { Link } from "react-router-dom";
 import Loader from "../components/common/Loader";
 import BookingCard from "../components/bookings/BookingCard";
 import { useAuth } from "../context/AuthContext";
 import bookingService from "../services/bookingService";
+
+const STATUS_TABS = [
+  { value: "", label: "All Requests" },
+  { value: "pending", label: "Pending" },
+  { value: "approved", label: "Approved" },
+  { value: "rejected", label: "Rejected" },
+  { value: "cancelled", label: "Cancelled" },
+];
 
 function MyBookings() {
   const { isAuthenticated } = useAuth();
@@ -50,52 +59,58 @@ function MyBookings() {
   };
 
   return (
-    <div className="page">
-      <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+    <div className="container stack-lg" style={{ paddingTop: 40, paddingBottom: 64 }}>
+      {/* Header */}
+      <div className="row-between">
         <div>
-          <h1 className="page-title">My bookings</h1>
-          <p className="page-subtitle">
-            Booking requests you&apos;ve submitted to venue owners.
-          </p>
+          <span className="eyebrow">Customer Account</span>
+          <h1 style={{ fontSize: "clamp(32px, 5vw, 48px)", marginTop: 4 }}>My Bookings</h1>
+          <p className="text-muted">Track reservation status and booking requests submitted to venue owners.</p>
         </div>
 
-        {/* Status Filter */}
-        <div>
-          <select
-            className="form-select"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            style={{ width: "auto" }}
-          >
-            <option value="">All Statuses</option>
-            <option value="pending">Pending</option>
-            <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-        </div>
+        <Link to="/venues" className="btn btn-primary">
+          Browse Venues <span>→</span>
+        </Link>
       </div>
 
-      {loading && <Loader label="Loading bookings..." />}
+      {/* Status Filter Pill Tabs */}
+      <div className="row-wrap" style={{ gap: 8 }}>
+        {STATUS_TABS.map((tab) => (
+          <button
+            key={tab.value}
+            type="button"
+            className={`btn btn-sm ${statusFilter === tab.value ? "btn-primary" : "btn-secondary"}`}
+            onClick={() => setStatusFilter(tab.value)}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {loading && <Loader label="Loading your bookings..." />}
 
       {!loading && error && (
-        <div className="alert alert-error" style={{ marginBottom: 16 }}>
-          {error}
+        <div className="alert alert-danger">
+          <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span>{error}</span>
         </div>
       )}
 
       {!loading && !error && bookings.length === 0 && (
-        <div className="empty-state card" style={{ padding: 32, textAlign: "center" }}>
-          <div className="empty-state-icon" style={{ fontSize: "2rem" }}>📅</div>
-          <h3 className="empty-state-title" style={{ marginTop: 8 }}>No bookings found</h3>
-          <p className="empty-state-subtitle text-muted">
-            Visit a venue and request a booking to get started.
+        <div className="empty-state">
+          <span style={{ fontSize: 40, display: "block" }}>📅</span>
+          <h3>No Bookings Found</h3>
+          <p className="text-muted" style={{ maxWidth: 460 }}>
+            You haven't requested any venue reservations matching this filter yet. Browse our venues catalog to find your ideal space.
           </p>
+          <Link to="/venues" className="btn btn-primary btn-lg" style={{ marginTop: 8 }}>
+            Browse Available Venues <span>→</span>
+          </Link>
         </div>
       )}
 
       {!loading && !error && bookings.length > 0 && (
-        <div className="booking-list">
+        <div className="grid-2">
           {bookings.map((booking) => (
             <BookingCard
               key={booking?._id || booking?.id}

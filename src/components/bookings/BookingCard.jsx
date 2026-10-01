@@ -2,25 +2,15 @@ function formatDate(dateValue) {
   if (!dateValue) return "";
   const d = new Date(dateValue);
   if (Number.isNaN(d.getTime())) return "";
-  return d.toISOString().split("T")[0]; // YYYY-MM-DD UTC date format
+  return d.toISOString().split("T")[0];
 }
 
-function statusLabel(status) {
-  if (!status) return "Pending";
-  if (status === "pending") return "Pending";
-  if (status === "approved") return "Approved";
-  if (status === "rejected") return "Rejected";
-  if (status === "cancelled") return "Cancelled";
-  return status;
-}
-
-function getStatusBadgeClass(status) {
-  if (!status) return "status-badge status-badge-pending";
-  if (status === "pending") return "status-badge status-badge-pending";
-  if (status === "approved") return "status-badge status-badge-approved";
-  if (status === "rejected") return "status-badge status-badge-rejected";
-  if (status === "cancelled") return "status-badge status-badge-cancelled";
-  return "status-badge status-badge-pending";
+function statusBadge(status) {
+  const s = (status || "pending").toLowerCase();
+  if (s === "approved") return <span className="badge badge-approved">Approved</span>;
+  if (s === "rejected") return <span className="badge badge-rejected">Rejected</span>;
+  if (s === "cancelled") return <span className="badge badge-cancelled">Cancelled</span>;
+  return <span className="badge badge-pending">Pending</span>;
 }
 
 function BookingCard({ booking, onApprove, onReject, onCancel, isOwnerView = false }) {
@@ -43,49 +33,70 @@ function BookingCard({ booking, onApprove, onReject, onCancel, isOwnerView = fal
     (typeof booking?.userId === "string" ? booking?.userId : "Customer");
 
   return (
-    <article className="booking-card card" style={{ marginBottom: 16 }}>
-      <div className="booking-card-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <div className="booking-card-title-section">
-          <h3 className="booking-card-title" style={{ margin: "0 0 4px 0" }}>{booking?.title}</h3>
-          <div className="booking-card-meta text-sm text-muted">
-            <span>Date: {formatDate(booking?.eventDate)}</span>
+    <article className="card stack" style={{ border: "1px solid var(--line-soft)" }}>
+      {/* Header Row */}
+      <div className="row-between" style={{ alignItems: "flex-start" }}>
+        <div>
+          <span className="eyebrow">Booking #{String(id).slice(-6)}</span>
+          <h3 style={{ fontSize: 20, fontWeight: 800, marginTop: 2 }}>{booking?.title || "Venue Booking"}</h3>
+        </div>
+        {statusBadge(status)}
+      </div>
+
+      {/* Details Box */}
+      <div className="stack-sm" style={{ padding: 16, background: "var(--bg)", borderRadius: "var(--radius-card)" }}>
+        <div className="row-between">
+          <div>
+            <span className="eyebrow" style={{ fontSize: 11 }}>Venue Space</span>
+            <strong style={{ display: "block", fontSize: 15 }}>{venueName}</strong>
+            <span className="text-muted text-sm">{venueLocation}</span>
+          </div>
+
+          <div style={{ textAlign: "right" }}>
+            <span className="eyebrow" style={{ fontSize: 11 }}>Event Date</span>
+            <strong style={{ display: "block", fontSize: 15 }}>{formatDate(booking?.eventDate)}</strong>
             {booking?.totalPrice !== undefined && (
-              <span style={{ marginLeft: 12 }}>Total: ${Number(booking.totalPrice).toLocaleString()}</span>
+              <span className="text-sm font-semibold" style={{ color: "var(--ink)" }}>
+                ${Number(booking.totalPrice).toLocaleString()} total
+              </span>
             )}
           </div>
         </div>
-        <div className="booking-card-status">
-          <span className={getStatusBadgeClass(status)} style={{ padding: "4px 8px", borderRadius: 4, fontWeight: "bold" }}>
-            {statusLabel(status)}
-          </span>
-        </div>
       </div>
 
-      <div className="booking-card-venue" style={{ marginTop: 12, padding: "8px 12px", background: "#f8f9fa", borderRadius: 6 }}>
-        <div className="booking-venue-name" style={{ fontWeight: 600 }}>{venueName}</div>
-        <div className="booking-venue-location text-sm text-muted">{venueLocation}</div>
-      </div>
-
+      {/* Notes / Special Requests */}
       {(booking?.notes || booking?.description) && (
-        <p className="booking-card-description text-sm" style={{ marginTop: 12 }}>
-          {booking.notes || booking.description}
-        </p>
+        <div className="stack-sm">
+          <span className="eyebrow" style={{ fontSize: 11 }}>Notes / Requests</span>
+          <p className="text-muted text-sm" style={{ background: "var(--surface)", padding: "10px 14px", borderRadius: "var(--radius-sm)", border: "1px solid var(--line-soft)" }}>
+            {booking.notes || booking.description}
+          </p>
+        </div>
+      )}
+
+      {/* Footer Info for Owner */}
+      {isOwnerView && customerName && (
+        <div className="row-between text-sm" style={{ paddingTop: 8, borderTop: "1px solid var(--line-soft)" }}>
+          <span className="text-muted">Requested by: <strong style={{ color: "var(--ink)" }}>{customerName}</strong></span>
+        </div>
       )}
 
       {/* Owner Action Buttons */}
       {isOwnerView && status === "pending" && (
-        <div className="booking-card-actions" style={{ marginTop: 16, display: "flex", gap: 8 }}>
+        <div className="row" style={{ gap: 8, marginTop: 4 }}>
           <button
             type="button"
-            className="btn btn-primary"
+            className="btn btn-primary btn-sm"
             onClick={() => onApprove?.(id)}
+            style={{ flex: 1 }}
           >
-            Approve
+            Approve Request
           </button>
           <button
             type="button"
-            className="btn btn-secondary"
+            className="btn btn-danger btn-sm"
             onClick={() => onReject?.(id)}
+            style={{ flex: 1 }}
           >
             Reject
           </button>
@@ -94,21 +105,14 @@ function BookingCard({ booking, onApprove, onReject, onCancel, isOwnerView = fal
 
       {/* User Action Button */}
       {!isOwnerView && (status === "pending" || status === "approved") && (
-        <div className="booking-card-actions" style={{ marginTop: 16 }}>
+        <div className="row" style={{ justifyContent: "flex-end", marginTop: 4 }}>
           <button
             type="button"
-            className="btn btn-ghost"
+            className="btn btn-danger btn-sm"
             onClick={() => onCancel?.(id)}
-            style={{ color: "#d32f2f" }}
           >
-            Cancel Request
+            Cancel Booking
           </button>
-        </div>
-      )}
-
-      {isOwnerView && customerName && (
-        <div className="booking-card-footer text-sm text-muted" style={{ marginTop: 12, paddingTop: 8, borderTop: "1px solid #eee" }}>
-          Requested by: <strong>{customerName}</strong>
         </div>
       )}
     </article>
