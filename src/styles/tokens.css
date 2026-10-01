@@ -1,0 +1,65 @@
+/* Design System Tokens */
+:root {
+  /* Canvas & Text */
+  --bg: #F4F4F4;
+  --surface: #FFFFFF;
+  --ink: #0A0A0B;
+  --muted: #6B6B70;
+  --line: #0A0A0B;
+  --line-soft: #E4E4E7;
+
+  /* Dark Sections */
+  --dark: #0A0A0B;
+  --dark-field: #1C1C1F;
+  --muted-on-dark: #9A9AA1;
+
+  /* Gradients & CTAs */
+  --accent-grad: linear-gradient(90deg, #F4A58E 0%, #E9A3C0 100%);
+
+  /* Pastel Card Gradients (top-left to bottom-right) */
+  --card-green-bg: linear-gradient(135deg, #CDF2BE 0%, #86D872 100%);
+  --card-purple-bg: linear-gradient(135deg, #EBDCF7 0%, #C795E8 100%);
+  --card-peach-bg: linear-gradient(135deg, #FCE6CE 0%, #F6C48F 100%);
+  --card-blue-bg: linear-gradient(135deg, #D6ECFB 0%, #8FC8EE 100%);
+  --card-pink-bg: linear-gradient(135deg, #F9DCE8 0%, #EBA0C0 100%);
+  --card-mint-bg: linear-gradient(135deg, #D3F2E8 0%, #8ED8BE 100%);
+
+  /* Status Colors (badges) */
+  --status-pending-bg: #FCE6CE;
+  --status-approved-bg: #CDF2BE;
+  --status-rejected-bg: #F9DCE8;
+  --status-cancelled-bg: #E4E4E7;
+
+  /* Semantics */
+  --danger: #C73E3E;
+  --danger-bg: #FDECEC;
+  --success: #1F7A3A;
+  --success-bg: #E8F7EC;
+
+  /* Typography */
+  --font-heading: "Archivo", "Archivo Black", "Inter", system-ui, -apple-system, sans-serif;
+  --font-body: "Inter", "Archivo", system-ui, -apple-system, sans-serif;
+
+  /* Radii */
+  --radius-frame: 28px;
+  --radius-card: 20px;
+  --radius-pill: 999px;
+  --radius-input: 999px;
+  --radius-textarea: 16px;
+  --radius-badge: 999px;
+  --radius-sm: 12px;
+
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  --space-3xl: 64px;
+  --space-4xl: 96px;
+
+  /* Focus & Shadow */
+  --focus-ring: 3px solid var(--ink);
+  --focus-offset: 2px;
+}
