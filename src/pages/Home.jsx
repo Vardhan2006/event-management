@@ -5,7 +5,6 @@ import VenueCard from "../components/venues/VenueCard";
 import venueService from "../services/venueService";
 
 function Home() {
-  console.log("REAL CHANGE");
   const [featured, setFeatured] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -26,210 +25,146 @@ function Home() {
   }, []);
 
   return (
-    <div className="page">
-      {/* Hero Section */}
-      <section className="hero">
-        <div>
-          <div className="hero-badge badge">
-            <span>New</span>
-            <span>Host your next event with confidence</span>
-          </div>
-          <h1 className="hero-title">
-            Discover and Book the Perfect Venue — <span className="hero-highlight">Effortlessly</span>
-          </h1>
-          <p className="hero-subtitle">
-            No more visiting multiple places. Compare venues, check availability, and request bookings in minutes.
-          </p>
-          <p className="hero-description">
-            Our platform brings together venue owners and event organizers in one seamless experience. 
-            Browse through curated venues, compare prices and amenities, and send booking requests instantly. 
-            Whether you're planning a corporate meeting, wedding, or community event, find your perfect space with just a few clicks.
-          </p>
+    <div className="container stack-lg" style={{ paddingTop: 40, paddingBottom: 64 }}>
+      {/* Hero Frame */}
+      <section className="hero-frame frame-corner-brackets">
+        <span className="eyebrow">Host Your Next Event With Confidence</span>
+        <h1 className="hero-headline">
+          Discover and Book the Perfect Venue — Effortlessly
+        </h1>
+        <p className="hero-subtext">
+          No more visiting multiple places. Compare venues, check availability, and request bookings in minutes.
+          Connecting venue owners and event organizers seamlessly.
+        </p>
 
-          <div className="hero-benefits">
-            <div className="benefit-item">
-              <div className="benefit-icon">🔍</div>
-              <div className="benefit-text">
-                <strong>Smart venue discovery</strong> in one place
-              </div>
-            </div>
-            <div className="benefit-item">
-              <div className="benefit-icon">💰</div>
-              <div className="benefit-text">
-                <strong>Clear pricing</strong> and real availability
-              </div>
-            </div>
-            <div className="benefit-item">
-              <div className="benefit-icon">⚡</div>
-              <div className="benefit-text">
-                <strong>Faster decision-making</strong> with detailed info
-              </div>
-            </div>
-            <div className="benefit-item">
-              <div className="benefit-icon">📝</div>
-              <div className="benefit-text">
-                <strong>Simple booking process</strong> with instant requests
-              </div>
-            </div>
-          </div>
-
-          <div className="hero-actions">
-            <Link to="/venues" className="btn btn-primary">
-              Browse venues
-            </Link>
-            <Link to="/owner-dashboard" className="btn btn-secondary">
-              List a venue
-            </Link>
-          </div>
+        <div className="hero-actions">
+          <Link to="/venues" className="btn btn-primary btn-lg">
+            Browse venues
+          </Link>
+          <Link to="/register" className="btn btn-accent btn-lg">
+            Get started <span>→</span>
+          </Link>
         </div>
+      </section>
 
-        <div className="hero-visual">
-          <div className="hero-illustration">
-            <div className="illustration-card">
-              <div className="illust-header">
-                <div className="illust-dots">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </div>
-                <div className="illust-title">Venue Search</div>
-              </div>
-              <div className="illust-content">
-                <div className="search-bar">
-                  <div className="search-icon">🔍</div>
-                  <div className="search-text">Search perfect venue...</div>
-                </div>
-                <div className="venue-preview">
-                  <div className="venue-card-mini">
-                    <div className="venue-image-placeholder"></div>
-                    <div className="venue-info">
-                      <div className="venue-name">Grand Ballroom</div>
-                      <div className="venue-price">$2,500/day</div>
-                    </div>
-                  </div>
-                  <div className="venue-card-mini">
-                    <div className="venue-image-placeholder"></div>
-                    <div className="venue-info">
-                      <div className="venue-name">Conference Center</div>
-                      <div className="venue-price">$1,800/day</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+      {/* 3-Column Pastel Gradient Feature Cards */}
+      <section className="section-sm">
+        <div className="grid-3">
+          <div className="card-pastel-green card-hover" style={{ padding: 32, display: "flex", flexDirection: "column", gap: 16 }}>
+            <span className="eyebrow" style={{ color: "var(--ink)" }}>Discovery</span>
+            <h3 style={{ fontSize: 24, fontWeight: 800 }}>Smart Venue Search</h3>
+            <p style={{ color: "rgba(10, 10, 11, 0.8)", fontSize: 15, flex: 1 }}>
+              Browse curated venues with filters for location, capacity, price, and amenities. Find your perfect space in seconds.
+            </p>
+            <div style={{ height: 1, backgroundColor: "var(--ink)", opacity: 0.2 }} />
+            <Link to="/venues" className="row" style={{ fontWeight: 700, fontSize: 14 }}>
+              Explore venues <span>→</span>
+            </Link>
+          </div>
+
+          <div className="card-pastel-purple card-hover" style={{ padding: 32, display: "flex", flexDirection: "column", gap: 16 }}>
+            <span className="eyebrow" style={{ color: "var(--ink)" }}>Transparency</span>
+            <h3 style={{ fontSize: 24, fontWeight: 800 }}>Clear Pricing & Dates</h3>
+            <p style={{ color: "rgba(10, 10, 11, 0.8)", fontSize: 15, flex: 1 }}>
+              Check real-time availability calendars and transparent daily pricing without hidden fees or surprise costs.
+            </p>
+            <div style={{ height: 1, backgroundColor: "var(--ink)", opacity: 0.2 }} />
+            <Link to="/venues" className="row" style={{ fontWeight: 700, fontSize: 14 }}>
+              Check availability <span>→</span>
+            </Link>
+          </div>
+
+          <div className="card-pastel-peach card-hover" style={{ padding: 32, display: "flex", flexDirection: "column", gap: 16 }}>
+            <span className="eyebrow" style={{ color: "var(--ink)" }}>For Owners</span>
+            <h3 style={{ fontSize: 24, fontWeight: 800 }}>Owner Dashboard</h3>
+            <p style={{ color: "rgba(10, 10, 11, 0.8)", fontSize: 15, flex: 1 }}>
+              List your space, manage booking requests, track venue stats, and approve incoming requests with ease.
+            </p>
+            <div style={{ height: 1, backgroundColor: "var(--ink)", opacity: 0.2 }} />
+            <Link to="/owner-dashboard" className="row" style={{ fontWeight: 700, fontSize: 14 }}>
+              List a venue <span>→</span>
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* About Us Section */}
-      <section className="about-section">
-        <div className="section-header">
-          <h2 className="section-title">About Us</h2>
-          <p className="section-subtitle">Connecting venues with events seamlessly</p>
+      {/* Checklist Block with Pastel Circles */}
+      <section className="checklist-block">
+        <div className="stack-sm" style={{ textAlign: "center", marginBottom: 32 }}>
+          <span className="eyebrow">Why Choose EventFlow</span>
+          <h2>Streamlined Venue Booking</h2>
+          <p className="text-muted" style={{ maxWidth: 600, margin: "0 auto" }}>
+            Our platform simplifies every step of venue reservation for event hosts and property owners alike.
+          </p>
         </div>
-        
-        <div className="about-content">
-          <div className="about-intro">
-            <p>
-              EventFlow was founded with a simple mission: to make venue booking effortless for both event organizers and venue owners. 
-              We saw the frustration in the traditional process - endless phone calls, site visits, and uncertain availability. 
-              Our platform transforms this experience into a streamlined digital journey.
-            </p>
-          </div>
-          
-          <div className="about-grid">
-            <div className="about-card">
-              <h3>Our Mission</h3>
-              <p>
-                To revolutionize event planning by providing a seamless platform that connects venue owners with event organizers, 
-                making the booking process transparent, efficient, and enjoyable for everyone involved.
-              </p>
-            </div>
-            
-            <div className="about-card">
-              <h3>Our Vision</h3>
-              <p>
-                To become the global standard for venue booking, where every event - from corporate conferences to community gatherings - 
-                finds its perfect space through our intuitive platform.
-              </p>
-            </div>
-            
-            <div className="about-card">
-              <h3>Our Values</h3>
-              <ul className="values-list">
-                <li><strong>Transparency:</strong> Clear pricing and honest information</li>
-                <li><strong>Efficiency:</strong> Save time for organizers and owners</li>
-                <li><strong>Quality:</strong> Curated venues that meet high standards</li>
-                <li><strong>Innovation:</strong> Continuously improving the booking experience</li>
-                <li><strong>Community:</strong> Supporting local venues and events</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      {/* Features Section */}
-      <section className="features-section">
-        <div className="section-header">
-          <h2 className="section-title">Features</h2>
-          <p className="section-subtitle">Everything you need for perfect venue booking</p>
-        </div>
-        
-        <div className="features-grid">
-          <div className="feature-card">
-            <div className="feature-icon">🔍</div>
-            <h3>Easy Venue Discovery</h3>
-            <p>
-              Browse through our curated collection of venues with advanced filters for location, capacity, price, and amenities. 
-              Find exactly what you need without the hassle.
-            </p>
+        <div className="checklist-grid">
+          <div className="checklist-item">
+            <div className="check-circle" style={{ backgroundColor: "var(--status-approved-bg)" }}>✓</div>
+            <div>
+              <strong style={{ display: "block", fontSize: 16 }}>Smart Venue Discovery</strong>
+              <p className="text-muted text-sm">Filter by capacity, price, location, and key features effortlessly.</p>
+            </div>
           </div>
-          
-          <div className="feature-card">
-            <div className="feature-icon">⏰</div>
-            <h3>Real-Time Booking Requests</h3>
-            <p>
-              Send booking requests instantly and receive real-time updates. No more waiting for email responses - 
-              track your request status right from your dashboard.
-            </p>
+
+          <div className="checklist-item">
+            <div className="check-circle" style={{ backgroundColor: "#EBDCF7" }}>✓</div>
+            <div>
+              <strong style={{ display: "block", fontSize: 16 }}>Clear Pricing</strong>
+              <p className="text-muted text-sm">Transparent daily rates with zero hidden charges or extra commission.</p>
+            </div>
           </div>
-          
-          <div className="feature-card">
-            <div className="feature-icon">👥</div>
-            <h3>Owner Dashboard Management</h3>
-            <p>
-              Venue owners get a comprehensive dashboard to manage listings, track bookings, update availability, 
-              and communicate with potential clients - all in one place.
-            </p>
+
+          <div className="checklist-item">
+            <div className="check-circle" style={{ backgroundColor: "#FCE6CE" }}>✓</div>
+            <div>
+              <strong style={{ display: "block", fontSize: 16 }}>Faster Decision-Making</strong>
+              <p className="text-muted text-sm">Detailed venue specs, photos, and live availability calendars.</p>
+            </div>
           </div>
-          
-          <div className="feature-card">
-            <div className="feature-icon">💎</div>
-            <h3>Transparent Pricing</h3>
-            <p>
-              No hidden fees or surprises. See clear pricing information, availability calendars, and detailed venue information 
-              before making any booking decisions.
-            </p>
+
+          <div className="checklist-item">
+            <div className="check-circle" style={{ backgroundColor: "#D6ECFB" }}>✓</div>
+            <div>
+              <strong style={{ display: "block", fontSize: 16 }}>Instant Booking Requests</strong>
+              <p className="text-muted text-sm">Submit date reservation requests directly to venue managers.</p>
+            </div>
+          </div>
+
+          <div className="checklist-item">
+            <div className="check-circle" style={{ backgroundColor: "#F9DCE8" }}>✓</div>
+            <div>
+              <strong style={{ display: "block", fontSize: 16 }}>Real-Time Status Tracking</strong>
+              <p className="text-muted text-sm">Track pending, approved, or rejected requests live on your dashboard.</p>
+            </div>
+          </div>
+
+          <div className="checklist-item">
+            <div className="check-circle" style={{ backgroundColor: "#D3F2E8" }}>✓</div>
+            <div>
+              <strong style={{ display: "block", fontSize: 16 }}>Comprehensive Owner Tools</strong>
+              <p className="text-muted text-sm">Manage multiple venue listings, pricing, and guest requests seamlessly.</p>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Featured Venues Section */}
-      <section>
-        <div className="page-header">
+      <section className="section-sm stack">
+        <div className="row-between">
           <div>
-            <h2 className="page-title">Featured venues</h2>
-            <p className="page-subtitle">
-              Popular spaces available for booking.
-            </p>
+            <span className="eyebrow">Explore Venues</span>
+            <h2 style={{ fontSize: 32 }}>Featured Venues</h2>
+            <p className="text-muted">Popular spaces available for booking right now.</p>
           </div>
           <Link to="/venues" className="btn btn-secondary">
-            View all venues
+            View all venues <span>→</span>
           </Link>
         </div>
+
         {loading && <Loader label="Loading featured venues..." />}
         {!loading && (
-          <div className="grid grid-3">
+          <div className="grid-3">
             {featured.map((venue) => (
               <VenueCard
                 key={venue?._id || venue?.id}
@@ -238,6 +173,25 @@ function Home() {
             ))}
           </div>
         )}
+      </section>
+
+      {/* Dark CTA Band */}
+      <section className="dark-section frame-corner-brackets stack" style={{ textAlign: "center", alignItems: "center" }}>
+        <span className="eyebrow" style={{ color: "var(--muted-on-dark)" }}>Get Started Today</span>
+        <h2 style={{ color: "#FFFFFF", fontSize: "clamp(32px, 4vw, 48px)", maxWidth: 700 }}>
+          Ready to Host Your Next Unforgettable Event?
+        </h2>
+        <p style={{ color: "var(--muted-on-dark)", maxWidth: 540 }}>
+          Join thousands of organizers and venue owners using EventFlow to connect and book amazing spaces.
+        </p>
+        <div className="row-wrap" style={{ justifyContent: "center", gap: 16, marginTop: 8 }}>
+          <Link to="/register" className="btn btn-accent btn-lg">
+            Create Free Account <span>→</span>
+          </Link>
+          <Link to="/venues" className="btn btn-secondary btn-lg" style={{ backgroundColor: "transparent", color: "#FFFFFF", borderColor: "#FFFFFF" }}>
+            Browse Catalog
+          </Link>
+        </div>
       </section>
     </div>
   );
