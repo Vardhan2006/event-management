@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import Loader from "../components/common/Loader";
 import venueService from "../services/venueService";
 import bookingService from "../services/bookingService";
@@ -8,11 +8,12 @@ import { useAuth } from "../context/AuthContext";
 function VenueDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated, isUser } = useAuth();
+  const { isAuthenticated, isUser, user } = useAuth();
 
   const [venue, setVenue] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   const [month, setMonth] = useState(() => {
     const today = new Date();
@@ -89,7 +90,7 @@ function VenueDetails() {
         venueId: id,
         title: form.title.trim(),
         notes: form.notes.trim(),
-        eventDate: form.eventDate, // YYYY-MM-DD
+        eventDate: form.eventDate,
       };
 
       await bookingService.createBooking(payload);
@@ -107,17 +108,16 @@ function VenueDetails() {
 
   if (error || !venue)
     return (
-      <div className="page">
-        <div className="card">
-          <div className="card-title">Venue not found</div>
-          <div className="card-subtitle">{error || "The venue you are looking for may have been removed."}</div>
+      <div className="container" style={{ paddingTop: 64, paddingBottom: 64 }}>
+        <div className="empty-state">
+          <h3>Venue Not Found</h3>
+          <p className="text-muted">{error || "The venue you are looking for may have been removed."}</p>
           <button
             type="button"
             className="btn btn-secondary"
             onClick={() => navigate("/venues")}
-            style={{ marginTop: 12 }}
           >
-            Back to venues
+            Back to Venues
           </button>
         </div>
       </div>
@@ -128,228 +128,264 @@ function VenueDetails() {
       ? Number(venue.capacity).toLocaleString()
       : "";
 
+  const isDateBooked = form.eventDate && bookedDates.includes(form.eventDate);
+  const isOwnerOfVenue = user?.role === "owner" && (user?.id === venue?.ownerId || user?.id === venue?.owner?._id);
+
   return (
-    <div className="page">
-      <div className="page-header">
+    <div className="container stack-lg" style={{ paddingTop: 40, paddingBottom: 64 }}>
+      {/* Header */}
+      <div className="row-between" style={{ alignItems: "flex-start" }}>
         <div>
-          <h1 className="page-title">{venue.name}</h1>
-          <p className="page-subtitle">
-            {venue.location}
-            {venue?.pricePerDay !== undefined && venue?.pricePerDay !== null && (
-              <> · ${Number(venue.pricePerDay).toLocaleString()} / day</>
-            )}
-            {venue?.owner?.name && <> · Managed by {venue.owner.name}</>}
-          </p>
+          <span className="eyebrow">Venue Details</span>
+          <h1 style={{ fontSize: "clamp(32px, 5vw, 48px)", marginTop: 4 }}>{venue.name}</h1>
+          <div className="row" style={{ gap: 8, marginTop: 8, color: "var(--muted)" }}>
+            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+            <span>{venue.location}</span>
+            {venue?.owner?.name && <span>· Managed by <strong>{venue.owner.name}</strong></span>}
+          </div>
         </div>
-        {isUser && (
-          <div>
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={() => setShowRequest((prev) => !prev)}
-            >
-              {showRequest ? "Hide booking form" : "Request booking"}
-            </button>
+
+        {venue?.pricePerDay !== undefined && venue?.pricePerDay !== null && (
+          <div className="badge" style={{ fontSize: 18, padding: "8px 20px", backgroundColor: "var(--card-green-bg)", border: "2px solid var(--ink)" }}>
+            ${Number(venue.pricePerDay).toLocaleString()} / day
           </div>
         )}
       </div>
 
-      <div className="grid grid-2 venue-details-layout">
-        <section className="card">
-          <div className="card-header">
-            <h2 className="card-title">About this venue</h2>
-            <p className="card-subtitle">Full details and availability.</p>
+      {/* Main Grid Layout */}
+      <div className="venue-details-grid">
+        {/* Left Column: Gallery & Details */}
+        <div className="stack-lg">
+          {/* Gallery */}
+          <div>
+            {venue?.images?.length > 0 ? (
+              <div>
+                <img
+                  src={venue.images[selectedImageIndex] || venue.images[0]}
+                  alt={venue.name}
+                  className="gallery-main-img"
+                />
+                {venue.images.length > 1 && (
+                  <div className="gallery-thumbs">
+                    {venue.images.map((imgUrl, idx) => (
+                      <img
+                        key={imgUrl}
+                        src={imgUrl}
+                        alt={`${venue.name} ${idx + 1}`}
+                        className={`gallery-thumb ${idx === selectedImageIndex ? "active" : ""}`}
+                        onClick={() => setSelectedImageIndex(idx)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="venue-card-img-placeholder" style={{ height: 380, borderRadius: "var(--radius-card)", border: "1px solid var(--line-soft)" }}>
+                <span>No Photos Available</span>
+              </div>
+            )}
           </div>
 
-          <div className="venue-detail-row">
-            <div className="venue-detail-label">Capacity</div>
-            <div className="venue-detail-value">
-              {formattedCapacity ? `${formattedCapacity} guests` : "-"}
+          {/* Specs Bar */}
+          <div className="card grid-3" style={{ padding: 24, textAlign: "center" }}>
+            <div>
+              <span className="eyebrow">Capacity</span>
+              <strong style={{ fontSize: 20, display: "block", marginTop: 4 }}>{formattedCapacity ? `${formattedCapacity} Guests` : "N/A"}</strong>
+            </div>
+            <div>
+              <span className="eyebrow">Rate</span>
+              <strong style={{ fontSize: 20, display: "block", marginTop: 4 }}>
+                {venue?.pricePerDay ? `$${Number(venue.pricePerDay).toLocaleString()}/day` : "Contact for rate"}
+              </strong>
+            </div>
+            <div>
+              <span className="eyebrow">Status</span>
+              <span className="badge badge-approved" style={{ marginTop: 4 }}>Active Space</span>
             </div>
           </div>
 
-          <div className="venue-detail-row">
-            <div className="venue-detail-label">Owner</div>
-            <div className="venue-detail-value">{venue?.owner?.name || "Venue Owner"}</div>
+          {/* Description */}
+          <div className="card stack">
+            <span className="eyebrow">About Space</span>
+            <h3 style={{ fontSize: 24 }}>Description</h3>
+            <p style={{ color: "var(--ink)", lineHeight: 1.7, fontSize: 16 }}>
+              {venue.description || "No description provided for this venue space."}
+            </p>
           </div>
 
+          {/* Services */}
           {venue?.services?.length > 0 && (
-            <div className="venue-detail-row">
-              <div className="venue-detail-label">Services</div>
-              <div className="venue-detail-value">
-                {venue.services.join(", ")}
+            <div className="card stack">
+              <span className="eyebrow">Amenities & Services</span>
+              <div className="chips-row" style={{ gap: 8 }}>
+                {venue.services.map((s) => (
+                  <span key={s} className="chip" style={{ fontSize: 14, padding: "8px 16px" }}>
+                    ✓ {s}
+                  </span>
+                ))}
               </div>
             </div>
           )}
+        </div>
 
-          <div className="venue-detail-row">
-            <div className="venue-detail-label">Description</div>
-            <div className="venue-detail-value venue-description">
-              {venue.description}
+        {/* Right Column: Sticky Booking Card & Availability */}
+        <div>
+          <div className="booking-sticky-card">
+            <div className="stack-sm">
+              <span className="eyebrow">Reservation</span>
+              <h3 style={{ fontSize: 24 }}>Book This Venue</h3>
+              <p className="text-muted text-sm">Select dates and send your request directly to the owner.</p>
             </div>
-          </div>
 
-          {/* Availability Calendar / List Section */}
-          <div style={{ marginTop: 24, paddingTop: 16, borderTop: "1px solid #e0e0e0" }}>
-            <h3 style={{ fontSize: "1.1rem", marginBottom: 12 }}>Check Availability</h3>
-            <div className="form-group" style={{ maxWidth: 200, marginBottom: 16 }}>
-              <label className="form-label" htmlFor="availability-month">Select Month</label>
+            {/* Availability Month Selector */}
+            <div className="field">
+              <label htmlFor="availability-month">Availability Month</label>
               <input
                 id="availability-month"
                 type="month"
-                className="form-input"
+                className="input"
                 value={month}
                 onChange={(e) => setMonth(e.target.value)}
               />
             </div>
 
-            {availabilityLoading && <p className="text-sm text-muted">Checking availability...</p>}
+            {availabilityLoading && <Loader label="Checking dates..." />}
 
             {!availabilityLoading && (
-              <div>
+              <div className="stack-sm">
+                <span className="eyebrow">Reserved Dates in {month}</span>
                 {bookedDates.length === 0 ? (
-                  <p className="text-sm text-success" style={{ color: "#2e7d32" }}>
-                    All dates in {month} are currently available for booking!
+                  <p className="text-sm" style={{ color: "var(--success)", fontWeight: 600 }}>
+                    ✓ All dates in {month} are currently available!
                   </p>
                 ) : (
-                  <div>
-                    <p className="text-sm text-muted" style={{ marginBottom: 8 }}>
-                      Already booked dates in {month}:
-                    </p>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                      {bookedDates.map((dateStr) => (
-                        <span
-                          key={dateStr}
-                          style={{
-                            background: "#ffebee",
-                            color: "#c62828",
-                            padding: "4px 8px",
-                            borderRadius: 4,
-                            fontSize: "0.85rem",
-                          }}
-                        >
-                          {dateStr}
-                        </span>
-                      ))}
-                    </div>
+                  <div className="date-chips-grid">
+                    {bookedDates.map((d) => (
+                      <span key={d} className="badge badge-rejected" style={{ fontSize: 11 }}>
+                        Booked {d}
+                      </span>
+                    ))}
                   </div>
                 )}
               </div>
             )}
-          </div>
-        </section>
 
-        <aside>
-          {showRequest && (
-            <div className="card venue-request-card">
-              <div className="card-header">
-                <h2 className="card-title">Request booking</h2>
-                <p className="card-subtitle">
-                  Send a booking request to {venue?.owner?.name || "the venue owner"}.
-                </p>
-              </div>
+            {/* User Booking Request Form */}
+            {isUser && !isOwnerOfVenue && (
+              <>
+                <div style={{ height: 1, backgroundColor: "var(--line-soft)" }} />
 
-              {!isAuthenticated && (
-                <div className="card" style={{ padding: 16, marginBottom: 14 }}>
-                  <div className="card-title">Sign in required</div>
-                  <div className="card-subtitle">
-                    Please log in as a user to request a booking.
-                  </div>
+                {!showRequest ? (
                   <button
                     type="button"
-                    className="btn btn-secondary"
-                    onClick={() => navigate("/login")}
-                    style={{ marginTop: 10 }}
+                    className="btn btn-primary btn-full btn-lg"
+                    onClick={() => setShowRequest(true)}
                   >
-                    Go to login
+                    Request Booking Now
                   </button>
-                </div>
-              )}
+                ) : (
+                  <form className="stack" onSubmit={handleRequestBooking}>
+                    {requestError && (
+                      <div className="alert alert-danger">
+                        <span>{requestError}</span>
+                      </div>
+                    )}
 
-              {isAuthenticated && (
-                <>
-                  {requestError && (
-                    <div className="alert alert-error" style={{ marginBottom: 14 }}>
-                      {requestError}
-                    </div>
-                  )}
+                    {isDateBooked && (
+                      <div className="alert alert-danger">
+                        <span>⚠️ Selected date ({form.eventDate}) is already booked! Please choose another date.</span>
+                      </div>
+                    )}
 
-                  <form onSubmit={handleRequestBooking}>
-                    <div className="form-group">
-                      <label className="form-label" htmlFor="title">
-                        Event title
-                      </label>
+                    <div className="field">
+                      <label htmlFor="title">Event Title</label>
                       <input
                         id="title"
                         name="title"
-                        className="form-input"
-                        placeholder="e.g. Annual Team Gala"
+                        type="text"
+                        className="input"
+                        placeholder="e.g. Corporate Gala"
                         value={form.title}
                         onChange={onChange}
                         required
                       />
                     </div>
 
-                    <div className="form-group">
-                      <label className="form-label" htmlFor="eventDate">
-                        Event date
-                      </label>
+                    <div className="field">
+                      <label htmlFor="eventDate">Event Date</label>
                       <input
                         id="eventDate"
                         name="eventDate"
                         type="date"
-                        className="form-input"
+                        className="input"
                         value={form.eventDate}
                         onChange={onChange}
                         required
                       />
                     </div>
 
-                    <div className="form-group">
-                      <label className="form-label" htmlFor="notes">
-                        Notes / Requests (Optional)
-                      </label>
+                    <div className="field">
+                      <label htmlFor="notes">Special Requests / Notes</label>
                       <textarea
                         id="notes"
                         name="notes"
-                        className="form-textarea"
-                        placeholder="Catering or equipment requests..."
+                        className="textarea"
+                        placeholder="Catering, seating layout, audio setup..."
                         value={form.notes}
                         onChange={onChange}
                       />
                     </div>
 
-                    <div className="venue-request-actions">
+                    <div className="row" style={{ gap: 8 }}>
                       <button
                         type="submit"
-                        className="btn btn-primary"
-                        disabled={requestSubmitting}
+                        className="btn btn-primary btn-full"
+                        disabled={requestSubmitting || isDateBooked}
                       >
-                        {requestSubmitting ? "Submitting..." : "Submit request"}
+                        {requestSubmitting ? "Submitting..." : "Submit Request"}
                       </button>
                       <button
                         type="button"
-                        className="btn btn-ghost"
+                        className="btn btn-secondary"
                         onClick={() => setShowRequest(false)}
                       >
                         Cancel
                       </button>
                     </div>
                   </form>
-                </>
-              )}
-            </div>
-          )}
+                )}
+              </>
+            )}
 
-          {!showRequest && (
-            <div className="card">
-              <div className="card-title">Ready to book?</div>
-              <div className="card-subtitle">
-                Click &quot;Request booking&quot; to check dates and submit your booking.
+            {/* Logged-out User Prompt */}
+            {!isAuthenticated && (
+              <div className="stack-sm" style={{ padding: 16, background: "var(--bg)", borderRadius: "var(--radius-card)", textAlign: "center" }}>
+                <p className="text-sm font-semibold">Sign in to book this venue</p>
+                <Link to="/login" className="btn btn-primary btn-full btn-sm">
+                  Log In to Book
+                </Link>
               </div>
-            </div>
-          )}
-        </aside>
+            )}
+
+            {/* Owner View Info Card */}
+            {user?.role === "owner" && (
+              <div className="stack-sm" style={{ padding: 16, background: "var(--card-purple-bg)", borderRadius: "var(--radius-card)", border: "1px solid var(--ink)" }}>
+                <span className="eyebrow" style={{ color: "var(--ink)" }}>Owner Mode</span>
+                <p className="text-sm" style={{ color: "var(--ink)" }}>
+                  {isOwnerOfVenue
+                    ? "This is your venue listing. Manage bookings and details from your Owner Dashboard."
+                    : "You are signed in as an Owner. Switch to a Customer account to submit booking requests."}
+                </p>
+                <Link to="/owner-dashboard" className="btn btn-secondary btn-full btn-sm" style={{ marginTop: 8 }}>
+                  Go to Dashboard
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

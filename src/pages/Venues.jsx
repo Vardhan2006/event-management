@@ -73,7 +73,7 @@ function Venues() {
     setFilters((prev) => ({
       ...prev,
       [name]: value,
-      page: 1, // Reset to page 1 on filter change
+      page: 1,
     }));
   };
 
@@ -97,38 +97,36 @@ function Venues() {
   };
 
   return (
-    <div className="page">
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">Browse venues</h1>
-          <p className="page-subtitle">
-            Discover spaces and request bookings for your next event.
-          </p>
-        </div>
+    <div className="container stack-lg" style={{ paddingTop: 40, paddingBottom: 64 }}>
+      {/* Header */}
+      <div>
+        <span className="eyebrow">Venue Catalog</span>
+        <h1 style={{ fontSize: "clamp(32px, 5vw, 48px)", marginTop: 4 }}>Browse Venues</h1>
+        <p className="text-muted">Discover perfect spaces and request date reservations for your next event.</p>
       </div>
 
-      {/* Filter and Search Bar */}
-      <div className="card" style={{ marginBottom: 24, padding: 16 }}>
-        <div className="grid grid-3" style={{ gap: 12 }}>
-          <div className="form-group">
-            <label className="form-label" htmlFor="q">Search</label>
+      {/* Filter Bar Card */}
+      <div className="filter-bar-card stack">
+        <div className="filter-grid">
+          <div className="field">
+            <label htmlFor="q">Search Keyword</label>
             <input
               id="q"
               name="q"
               type="text"
-              className="form-input"
+              className="input"
               placeholder="Name or location..."
               value={filters.q}
               onChange={handleFilterChange}
             />
           </div>
 
-          <div className="form-group">
-            <label className="form-label" htmlFor="location">Location</label>
+          <div className="field">
+            <label htmlFor="location">Location</label>
             <select
               id="location"
               name="location"
-              className="form-select"
+              className="select"
               value={filters.location}
               onChange={handleFilterChange}
             >
@@ -141,12 +139,12 @@ function Venues() {
             </select>
           </div>
 
-          <div className="form-group">
-            <label className="form-label" htmlFor="sort">Sort By</label>
+          <div className="field">
+            <label htmlFor="sort">Sort Order</label>
             <select
               id="sort"
               name="sort"
-              className="form-select"
+              className="select"
               value={filters.sort}
               onChange={handleFilterChange}
             >
@@ -155,110 +153,100 @@ function Venues() {
               <option value="price_desc">Price: High to Low</option>
             </select>
           </div>
-        </div>
 
-        <div className="grid grid-3" style={{ gap: 12, marginTop: 12 }}>
-          <div className="form-group">
-            <label className="form-label" htmlFor="minCapacity">Min Capacity</label>
+          <div className="field">
+            <label htmlFor="minCapacity">Min Capacity</label>
             <input
               id="minCapacity"
               name="minCapacity"
               type="number"
               min="0"
-              className="form-input"
+              className="input"
               placeholder="e.g. 50"
               value={filters.minCapacity}
               onChange={handleFilterChange}
             />
           </div>
 
-          <div className="form-group">
-            <label className="form-label" htmlFor="minPrice">Min Price ($)</label>
-            <input
-              id="minPrice"
-              name="minPrice"
-              type="number"
-              min="0"
-              className="form-input"
-              placeholder="Min price"
-              value={filters.minPrice}
-              onChange={handleFilterChange}
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label" htmlFor="maxPrice">Max Price ($)</label>
+          <div className="field">
+            <label htmlFor="maxPrice">Max Price ($)</label>
             <input
               id="maxPrice"
               name="maxPrice"
               type="number"
               min="0"
-              className="form-input"
-              placeholder="Max price"
+              className="input"
+              placeholder="Max $/day"
               value={filters.maxPrice}
               onChange={handleFilterChange}
             />
           </div>
-        </div>
 
-        <div style={{ marginTop: 12, display: "flex", justifyContent: "flex-end" }}>
-          <button type="button" className="btn btn-ghost" onClick={handleResetFilters}>
+          <button type="button" className="btn btn-secondary btn-sm" onClick={handleResetFilters} style={{ height: 48 }}>
             Reset Filters
           </button>
         </div>
       </div>
 
-      {loading && <Loader label="Loading venues..." />}
+      {/* Results State */}
+      {loading && <Loader label="Searching available venues..." />}
 
       {!loading && error && (
-        <div className="card">
-          <div className="card-title">Error</div>
-          <div className="card-subtitle">{error}</div>
+        <div className="alert alert-danger">
+          <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span>{error}</span>
         </div>
       )}
 
       {!loading && !error && venues.length === 0 && (
-        <div className="card">
-          <div className="card-title">No venues found</div>
-          <div className="card-subtitle">
-            Try adjusting your search filters to find available venues.
-          </div>
+        <div className="empty-state">
+          <h3>No Venues Found</h3>
+          <p className="text-muted">No venues match your selected filters. Try broadening your location or capacity criteria.</p>
+          <button type="button" className="btn btn-primary" onClick={handleResetFilters}>
+            Reset Filters
+          </button>
         </div>
       )}
 
       {!loading && !error && venues.length > 0 && (
         <>
-          <div className="grid grid-3">
+          <div className="grid-3">
             {venues.map((venue) => (
               <VenueCard key={venue?._id || venue?.id} venue={venue} />
             ))}
           </div>
 
-          {/* Pagination Controls */}
-          <div
-            style={{
-              marginTop: 24,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
+          {/* Pagination */}
+          <div className="row-between" style={{ paddingTop: 16, borderTop: "1px solid var(--line-soft)" }}>
             <span className="text-sm text-muted">
               Page {pagination.page} of {pagination.totalPages} ({pagination.totalCount} total venues)
             </span>
 
-            <div style={{ display: "flex", gap: 8 }}>
+            <div className="row" style={{ gap: 8 }}>
               <button
                 type="button"
-                className="btn btn-ghost"
+                className="btn btn-secondary btn-sm"
                 disabled={pagination.page <= 1}
                 onClick={() => handlePageChange(pagination.page - 1)}
               >
                 Previous
               </button>
+
+              {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  className={`btn btn-sm ${p === pagination.page ? "btn-primary" : "btn-secondary"}`}
+                  onClick={() => handlePageChange(p)}
+                  style={{ minWidth: 36, padding: "8px 12px" }}
+                >
+                  {p}
+                </button>
+              ))}
+
               <button
                 type="button"
-                className="btn btn-ghost"
+                className="btn btn-secondary btn-sm"
                 disabled={pagination.page >= pagination.totalPages}
                 onClick={() => handlePageChange(pagination.page + 1)}
               >
